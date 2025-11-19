@@ -38,6 +38,11 @@ def main():
                 print(f"Errore durante la conversione: {e}")
 
 
+    for filename in os.listdir(pngfolder):
+        full_path = os.path.join(pngfolder, filename)
+        name, ext = os.path.splitext(filename)
+        RecognitionFromFile(full_path, name)
+
     with open('dataset_faces.dat', 'wb') as f:
         pickle.dump(all_face_encodings, f)
 
