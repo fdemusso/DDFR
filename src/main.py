@@ -34,8 +34,10 @@ def main():
                 else:
                     label = "Unknown"    # Non so chi sia
 
-                if label == "Unknown":
+                # gestione persona sconosciuta
+                if label == "Unknown": 
                     print("Unknown Person Detected!")
+                    webcam.release()
                     selfie_capture.main()
                     break
 
@@ -60,7 +62,6 @@ def main():
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break
 
-    webcam.release()
     cv2.destroyAllWindows()
 
 if __name__ == "__main__":
