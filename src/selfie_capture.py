@@ -3,7 +3,7 @@ import cv2 # pip install opencv-python
 
 webcam = cv2.VideoCapture(0)
 
-def main():
+def selfie_capture():
     # print("Persona Sconosciuta Rilevata! Cattura un selfie.")
 
     ret, frame = webcam.read()
@@ -32,6 +32,3 @@ def main():
         cv2.putText(frame, label, (left + 6, bottom - 6), label_font, 0.8, (255, 255, 255), 1)
 
         cv2.imshow("Persona Sconosciuta", unknown_frame)
-
-if __name__ == "__main__":
-    main()
