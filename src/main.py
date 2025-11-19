@@ -8,6 +8,7 @@ import pickle
 import recognition
 
 webcam = cv2.VideoCapture(0)
+DATABASE_PATH = 'dataset_faces.dat'
 
 # Valori < 0.6 rendono il modello più preciso
 TOLERANCE = 0.5
@@ -39,10 +40,12 @@ def writeretangle(frame, left, top, right, bottom, name):
         scelta=input("Vuoi aggiungerlo al database si(s) o no(n)?")
         if scelta.lower() == 's':
             ret, unknown_frame = webcam.read()
-            cv2.imshow("Captured", unknown_frame)
-            #continue
+            cv2.imwrite("Img/PNG/Captured.png", unknown_frame)
+            with open(DATABASE_PATH, 'wb') as f:
+                pickle.dump(unknown_frame, f)
+            return
         elif scelta.lower() == 'n':
-            pass
+            return
         else:
             print("Volto non aggiunto.\n")
 
