@@ -39,9 +39,9 @@ def FolderScan():
 
     #Cartelle del progetto
 
-    if not os.path.exists("dataset_faces.dat"):
+    if not os.path.exists(DATABASE_PATH):
     # creare il file vuoto (solo la prima volta)
-        open("dataset_faces.dat", "wb").close()
+        open(DATABASE_PATH, "wb").close()
         print("Il database è stato creato")
 
     # Conversione HEIC in PNG
