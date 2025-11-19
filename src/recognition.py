@@ -16,30 +16,27 @@ def RecognitionFromFile(FilePath, name):
 
 def main():
 
-    Flavio_path = 'Img/HEIC/Flavio.HEIC'
-    Francesca_path = 'Img/HEIC/Francesca.HEIC'
+    #Cartelle del progetto
+    heicfolder = "Img/HEIC"
+    pngfolder = "Img/PNG"
 
-    heif.register_heif_opener()
-    # Percorso del file PNG di output
-    Flavio_File = 'Img/PNG/Flavio.png'
-    Francesca_File = 'Img/PNG/Francesca.png'
 
-    if not os.path.exists(Flavio_File):
-        try: 
-            Flavio_img = Image.open(Flavio_path)
-            Flavio_img.save(Flavio_File, 'PNG')
-        except Exception as e:
-            print(f"Errore durante la conversione: {e}")  
+    for filename in os.listdir(heicfolder):
 
-    if not os.path.exists(Francesca_File):
-        try: 
-            Francesca_img = Image.open(Francesca_path)
-            Francesca_img.save(Francesca_File, 'PNG')
-        except Exception as e:
-            print(f"Errore durante la conversione: {e}") 
+        heif.register_heif_opener()
+        full_path = os.path.join(heicfolder, filename)
+        name, ext = os.path.splitext(filename)
+        
+        print(name)
+        filepng = f"{pngfolder}/{name}.png"
 
-    RecognitionFromFile(Flavio_File, "Flavio")
-    RecognitionFromFile(Francesca_File, "Francesca")
+        if not os.path.exists(filepng):
+            try: 
+                img = Image.open(full_path)
+                img.save(filepng, 'PNG')
+            except Exception as e:
+                print(f"Errore durante la conversione: {e}")
+
 
     with open('dataset_faces.dat', 'wb') as f:
         pickle.dump(all_face_encodings, f)
