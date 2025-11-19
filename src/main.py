@@ -7,9 +7,17 @@ import numpy as np
 import pickle
 import recognition
 
+# Funzione per pulire il terminale
+def clear_terminal():
+    if os.name == "nt":       # Windows
+        os.system("cls")
+    else:                     # macOS o Linux
+        os.system("clear")
+
 
 def writeretangle(frame, left, top, right, bottom, name):
 
+    # Disegno l'effettivo rettangolo con il nome sotto
     def block(blu, green, red):
     
         cv2.rectangle(frame, (left, top), (right, bottom), (blu, green, red), 2)
@@ -17,6 +25,8 @@ def writeretangle(frame, left, top, right, bottom, name):
         font = cv2.FONT_HERSHEY_DUPLEX
         cv2.putText(frame, name, (left + 6, bottom - 6), font, 1.0, (255, 255, 255), 1) #white rgb
 
+    # Colore del rettangolo in base al riconoscimento
+    # TODO: riconoscere il volto del paziente
     if name == "Sconosciuto":
         #Rosso per gli sconosciuti
         block(0,0,255) 
@@ -30,12 +40,13 @@ def main():
     # ---- Setto la videocamera di base ----
 
     webcam = cv2.VideoCapture(0)
+    clear_terminal()
 
     # avvia scansione volti
     recognition.FolderScan()
 
-    # Load face encodings
-    with open('dataset_faces.dat', 'rb') as f:
+    # Carico i volti dal database
+    with open(recognition.DATABASE_PATH, 'rb') as f:
         all_face_encodings = pickle.load(f)
 
     # Grab the list of names and the list of encodings
@@ -50,8 +61,10 @@ def main():
     process_this_frame = True
 
     while True:
+
         ret, frame = webcam.read()
 
+        #Riduco la risoluzione per velocizzare il processo
         small_frame = cv2.resize(frame, None, fx=0.20, fy=0.20)
         rgb_small_frame = cv2.cvtColor(small_frame, 4)
 
@@ -60,15 +73,19 @@ def main():
         face_locations = face_recognition.face_locations(rgb_small_frame)
         face_encodings = face_recognition.face_encodings(rgb_small_frame, face_locations)
 
+        # ottengo i nomi dei volti riconosciuti
         if process_this_frame:
 
             face_names = []
 
             for face_encoding in face_encodings:
+
+                # Identifico gli sconosciuti
                 matches = face_recognition.compare_faces(known_face_encodings, face_encoding)
                 name = "Sconosciuto"
 
                 # Calcola con precisione il volto della persona
+                # TODO: migliorare la soglia di riconoscimento
                 face_distances = face_recognition.face_distance(known_face_encodings, face_encoding)
                 best_match_index = np.argmin(face_distances)
                 if matches[best_match_index]:
@@ -76,9 +93,10 @@ def main():
 
                 face_names.append(name)
 
-        process_this_frame = not process_this_frame
+        # Stabilisco quali frame processare e quali no
+        process_this_frame = not process_this_frame 
 
-        # Display the results
+        # Mostro i risultati
         for (top, right, bottom, left), name in zip(face_locations, face_names):
             # Scale back up face locations since the frame we detected in was scaled to 1/4 size
             top *= 5
@@ -86,13 +104,17 @@ def main():
             bottom *= 5
             left *= 5
 
+            # Disegno il rettangolo attorno al volto
             writeretangle(frame, left, top, right, bottom, name)
 
+        # Mostro il video
         cv2.imshow("Video Feed", frame)
 
+        # Esco con 'q'
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break
 
+    # rilascio il controllo della webcam
     webcam.release()
     cv2.destroyAllWindows()
 

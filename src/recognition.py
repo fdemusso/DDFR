@@ -6,14 +6,16 @@ import os
 import numpy as np
 import pickle
 
-
+# Percorso del database dei volti
+DATABASE_PATH = 'dataset_faces.dat'
+HEIC_FOLDER = "Img/HEIC"
+PNG_FOLDER = "Img/PNG"
 
 def RecognitionFromFile(FilePath, name):
-    db_path = 'dataset_faces.dat'
 
     # Leggo il database esistente o creo dict vuoto
-    if os.path.exists(db_path) and os.path.getsize(db_path) > 0:
-        with open(db_path, 'rb') as f:
+    if os.path.exists(DATABASE_PATH) and os.path.getsize(DATABASE_PATH) > 0:
+        with open(DATABASE_PATH, 'rb') as f:
             all_face_encodings = pickle.load(f)
     else:
         all_face_encodings = {}
@@ -29,28 +31,27 @@ def RecognitionFromFile(FilePath, name):
         print(f"{name}: Image Loaded. 128-dimension Face Encoding Generated.\n")
 
     # Risalvo tutto il dict
-    with open(db_path, 'wb') as f:
+    with open(DATABASE_PATH, 'wb') as f:
         pickle.dump(all_face_encodings, f)
 
 
 def FolderScan():
 
     #Cartelle del progetto
-    heicfolder = "Img/HEIC"
-    pngfolder = "Img/PNG"
 
     if not os.path.exists("dataset_faces.dat"):
     # creare il file vuoto (solo la prima volta)
         open("dataset_faces.dat", "wb").close()
         print("Il database è stato creato")
 
-    for filename in os.listdir(heicfolder):
+    # Conversione HEIC in PNG
+    for filename in os.listdir(HEIC_FOLDER):
 
         heif.register_heif_opener()
-        full_path = os.path.join(heicfolder, filename)
+        full_path = os.path.join(HEIC_FOLDER, filename)
         name, ext = os.path.splitext(filename)
 
-        filepng = f"{pngfolder}/{name}.png"
+        filepng = f"{PNG_FOLDER}/{name}.png"
 
         if not os.path.exists(filepng):
             try: 
@@ -59,9 +60,9 @@ def FolderScan():
             except Exception as e:
                 print(f"Errore durante la conversione: {e}")
 
-
-    for filename in os.listdir(pngfolder):
-        full_path = os.path.join(pngfolder, filename)
+    # Riconoscimento volti dalle immagini PNG
+    for filename in os.listdir(PNG_FOLDER):
+        full_path = os.path.join(PNG_FOLDER, filename)
         name, ext = os.path.splitext(filename)
         RecognitionFromFile(full_path, name)
 

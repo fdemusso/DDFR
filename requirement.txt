@@ -1,0 +1,16 @@
+# Per il riconoscimento facciale
+face_recognition
+face_recognition_models @ git+https://github.com/ageitgey/face_recognition_models
+
+# Per la gestione immagini
+Pillow
+pillow-heif
+
+# Elaborazione immagini e numerica
+numpy
+opencv-python
+
+# Per garantire compatibilità e installazione pulita
+wheel
+setuptools
+pip
