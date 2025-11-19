@@ -1,8 +1,9 @@
 import face_recognition
 import cv2 # pip install opencv-python
-import selfie_capture
+import selfie_capture # Importazione del modulo selfie_capture
 
 def main():
+
     webcam = cv2.VideoCapture(0)
 
     image_file = input("Target Image File > ")
@@ -29,10 +30,16 @@ def main():
             if frame_encodings:
                 frame_face_encoding = frame_encodings[0]
                 match = face_recognition.compare_faces([target_encoding], frame_face_encoding)[0]
-                label = target_name if match else "Unknown"
+                if match:
+                    label = target_name  # È la persona giusta
+                else:
+                    label = "Unknown"    # Non so chi sia
 
-                if label == "Unknown":
+                # gestione persona sconosciuta
+                if label == "Unknown": 
                     print("Unknown Person Detected!")
+                    webcam.release()
+                    cv2.destroyAllWindows()
                     selfie_capture.main()
                     break
 
@@ -57,8 +64,7 @@ def main():
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break
 
-    webcam.release()
-    cv2.destroyAllWindows()
+
 
 if __name__ == "__main__":
     main()

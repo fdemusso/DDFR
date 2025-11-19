@@ -1,22 +1,22 @@
 import face_recognition
 import cv2 # pip install opencv-python
 
-webcam = cv2.VideoCapture(0)
+def main():
 
-def selfie_capture():
+    webcam = cv2.VideoCapture(0)
+
     # print("Persona Sconosciuta Rilevata! Cattura un selfie.")
 
     ret, frame = webcam.read()
-    face_locations = face_recognition.face_locations(rgb_small_frame)
     small_frame = cv2.resize(frame, None, fx=0.20, fy=0.20)
     rgb_small_frame = cv2.cvtColor(small_frame, 4)
+    face_locations = face_recognition.face_locations(rgb_small_frame)
 
     label = "Sconosciuto"
     ret, unknown_frame = webcam.read()
     unknow_name=input("Inserisci il nome della persona sconosciuta: ")
     cv2.imshow("Captured", unknown_frame)         
     cv2.imwrite(unknow_name + ".jpg", unknown_frame)
-    process_this_frame = not process_this_frame
 
     if face_locations:
         top, right, bottom, left = face_locations[0]
