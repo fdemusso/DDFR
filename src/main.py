@@ -6,6 +6,7 @@ import os
 import numpy as np
 import pickle
 import recognition
+import selfie_capture
 
 # Valori < 0.6 rendono il modello più preciso
 TOLERANCE = 0.5
@@ -33,6 +34,7 @@ def writeretangle(frame, left, top, right, bottom, name):
     if name == "Sconosciuto":
         #Rosso per gli sconosciuti
         block(0,0,255) 
+        selfie_capture.main()
 
     else:  
         #Verde per i riconosciuti        

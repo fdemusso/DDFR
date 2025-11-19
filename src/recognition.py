@@ -65,4 +65,3 @@ def FolderScan():
         full_path = os.path.join(PNG_FOLDER, filename)
         name, ext = os.path.splitext(filename)
         RecognitionFromFile(full_path, name)
-
