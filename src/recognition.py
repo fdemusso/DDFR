@@ -27,7 +27,7 @@ def RecognitionFromFile(FilePath, name):
         print(f"Volto di {name} già presente")
     else:
         File_target = face_recognition.load_image_file(FilePath)
-        all_face_encodings[name] = face_recognition.face_encodings(File_target)[0]
+        all_face_encodings[name] = face_recognition.face_encodings(File_target, num_jitters=100)[0]
         print(f"{name}: Image Loaded. 128-dimension Face Encoding Generated.\n")
 
     # Risalvo tutto il dict

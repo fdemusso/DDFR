@@ -7,6 +7,9 @@ import numpy as np
 import pickle
 import recognition
 
+# Valori < 0.6 rendono il modello più preciso
+TOLERANCE = 0.5
+
 # Funzione per pulire il terminale
 def clear_terminal():
     if os.name == "nt":       # Windows
@@ -81,7 +84,7 @@ def main():
             for face_encoding in face_encodings:
 
                 # Identifico gli sconosciuti
-                matches = face_recognition.compare_faces(known_face_encodings, face_encoding)
+                matches = face_recognition.compare_faces(known_face_encodings, face_encoding,TOLERANCE)
                 name = "Sconosciuto"
 
                 # Calcola con precisione il volto della persona
