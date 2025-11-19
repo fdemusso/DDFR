@@ -5,10 +5,14 @@ import pillow_heif as heif
 import os
 import numpy as np
 import pickle
+import recognition
 
 # ---- Setto la videocamera di base ----
 
 webcam = cv2.VideoCapture(0)
+
+# avvia scansione volti
+recognition.FolderScan()
 
 # Load face encodings
 with open('dataset_faces.dat', 'rb') as f:
