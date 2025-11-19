@@ -6,7 +6,8 @@ import os
 import numpy as np
 import pickle
 import recognition
-import selfie_capture
+
+webcam = cv2.VideoCapture(0)
 
 # Valori < 0.6 rendono il modello più preciso
 TOLERANCE = 0.5
@@ -34,7 +35,18 @@ def writeretangle(frame, left, top, right, bottom, name):
     if name == "Sconosciuto":
         #Rosso per gli sconosciuti
         block(0,0,255) 
-        selfie_capture.main()
+        print("Volto Sconosciuto Rilevato! \n")
+        scelta=input("Vuoi aggiungerlo al database si(s) o no(n)?")
+        if scelta.lower() == 's':
+            ret, unknown_frame = webcam.read()
+            cv2.imshow("Captured", unknown_frame)
+            #continue
+        elif scelta.lower() == 'n':
+            pass
+        else:
+            print("Volto non aggiunto.\n")
+
+
 
     else:  
         #Verde per i riconosciuti        
@@ -44,7 +56,7 @@ def writeretangle(frame, left, top, right, bottom, name):
 def main():
     # ---- Setto la videocamera di base ----
 
-    webcam = cv2.VideoCapture(0)
+    
     clear_terminal()
 
     # avvia scansione volti
@@ -114,6 +126,8 @@ def main():
 
         # Mostro il video
         cv2.imshow("Video Feed", frame)
+
+        
 
         # Esco con 'q'
         if cv2.waitKey(1) & 0xFF == ord('q'):
