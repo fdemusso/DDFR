@@ -1,8 +1,9 @@
 import face_recognition
 import cv2 # pip install opencv-python
-import selfie_capture # Importtazione del modulo selfie_capture
+import selfie_capture # Importazione del modulo selfie_capture
 
 def main():
+
     webcam = cv2.VideoCapture(0)
 
     image_file = input("Target Image File > ")
