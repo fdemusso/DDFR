@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prova Page</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    
+</head>
+
+<body>
+    <div class="cont">
+        <div id="Img_div">
+            <img src="pic_trulli.jpg" alt="Immagine prova" id="Img">
+            
+            <form id="form">
+                <label for="fname">Nome :</label><br>
+                <input type="text" id="fname" name="fname"><br>
+                
+                <label for="lname">Cognome:</label><br>
+                <input type="text" id="lname" name="lname"><br>
+                
+                <label for="parentela">Parentela:</label><br>
+                <input type="text" id="parentela" name="parentela"><br><br>
+                
+                <input type="submit" value="Inserisci">
+            </form>
+        </div>        
+        <div id="avviso">
+        <h1>FACCIA NON RICONOSCIUTA</h1>
+        
+        <button id="Button"><i class="material-icons">add</i></button>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', (event) => {
+            const info = document.getElementById("form");
+            if(info) {
+                info.style.display = "none";
+            }
+        });
+
+        function setupToggleButton(buttonId, infoId) {
+            const button = document.getElementById(buttonId);
+            const info = document.getElementById(infoId);
+
+            if (!button || !info) {
+                console.error("Button or Info element not found");
+                return;
+            }
+
+            button.onclick = () => {
+                if (info.style.display === "none" || info.style.display === "") {
+                    info.style.display = "block";
+                    button.innerHTML = '<i class="material-icons">remove</i>';
+                } else {                   
+                    info.style.display = "none";                   
+                    button.innerHTML = '<i class="material-icons">add</i>';
+                }
+            };
+        }
+
+        
+        setupToggleButton("Button", "form");
+
+    </script>
+</body>
+</html>
