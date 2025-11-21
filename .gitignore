@@ -1,3 +1,5 @@
+logs/
+
 
 # Ignore image files
 *.png

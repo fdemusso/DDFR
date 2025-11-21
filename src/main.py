@@ -6,9 +6,14 @@ import os
 import numpy as np
 import pickle
 import recognition
+import logging
+import datetime
+
+# Directory per i file di log
+logger = logging.getLogger(__name__)
 
 # Valori < 0.6 rendono il modello più preciso
-TOLERANCE = 0.5
+TOLERANCE = 0.55
 
 # Funzione per pulire il terminale
 def clear_terminal():
@@ -40,22 +45,40 @@ def writeretangle(frame, left, top, right, bottom, name):
 
 
 def main():
-    # ---- Setto la videocamera di base ----
+
+    # --- Inizio configurazione dei log ---
+    if not os.path.exists(recognition.LOGS):
+        os.makedirs(recognition.LOGS)
+
+    time = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
+    logging.basicConfig(filename=f"{recognition.LOGS}/{time}.log", level=logging.INFO)
+    logger.info('Avviato il programma di riconoscimento facciale.')
+
+    # --- Fine configurazione dei log ---
 
     webcam = cv2.VideoCapture(0)
+    logger.info('Webcam inizializzata.')
     clear_terminal()
 
     # avvia scansione volti
     recognition.FolderScan()
 
     # Carico i volti dal database
-    with open(recognition.DATABASE_PATH, 'rb') as f:
-        all_face_encodings = pickle.load(f)
+
+    try:
+        with open(recognition.DATABASE_PATH, 'rb') as f:
+            all_face_encodings = pickle.load(f)
+            logger.info(f"{recognition.DATABASE_PATH} caricato con successo.")
+    except FileNotFoundError:
+        logger.critical(f"Database non trovato: {recognition.DATABASE_PATH}")
+    except Exception as e:
+        logger.error(f"Si è verificato un altro errore: {e}")
 
     # Grab the list of names and the list of encodings
+    
     known_face_names = list(all_face_encodings.keys())
     known_face_encodings = np.array(list(all_face_encodings.values()))
-
+    logger.info('Caricamento dei volti completato.')
 
     # Initialize some variables
     face_locations = []
@@ -115,11 +138,13 @@ def main():
 
         # Esco con 'q'
         if cv2.waitKey(1) & 0xFF == ord('q'):
+            logger.info('Chiusura del programma di riconoscimento facciale.')
             break
 
     # rilascio il controllo della webcam
     webcam.release()
     cv2.destroyAllWindows()
+    logger.info('Webcam rilasciata e tutte le finestre chiuse.')
 
 if __name__ == "__main__":
     main()
