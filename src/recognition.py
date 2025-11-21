@@ -5,14 +5,55 @@ import pillow_heif as heif
 import os
 import numpy as np
 import pickle
+import logging
 
 # Percorso del database dei volti
 DATABASE_PATH = 'dataset_faces.dat'
-HEIC_FOLDER = "Img/HEIC"
-PNG_FOLDER = "Img/PNG"
+IMG_FOLDER = "Img"
+TEMP_FOLDER = "Temp"
+
+def ConvertAnyToPng(FilePath, name, ext):
+   
+    filepng = f"{IMG_FOLDER}/{TEMP_FOLDER}/{name}.png"
+
+    #Creo la cartella per le immagini temporanee se non esiste
+    temp = f"{IMG_FOLDER}/{TEMP_FOLDER}"
+    if not os.path.exists(temp):
+        os.makedirs(temp)
+
+    print(f"CONVERTANYTOPNG: Conversione file {FilePath} con ext = {ext} in PNG...")
+    # Converto Heic in PNG
+    if ext.lower() == ".heic":
+        heif.register_heif_opener()
+
+        if not os.path.exists(filepng):
+            try: 
+                img = Image.open(FilePath)
+                img.save(filepng, 'PNG')
+                return filepng
+            except Exception as e:
+                print(f"CONVERTANYTOPNG: Errore durante la conversione: {e}")
+                return None
+
+    # Converto Heic in PNG
+    elif ext.lower() in [".jpg", ".jpeg", ".bmp", ".tiff", ".gif", ".png"]:
+        img = Image.open(FilePath)
+        img.save(filepng, 'PNG')
+        return filepng
+
+     # Se è già PNG lo ritorno così com'è
+    elif ext.lower() == ".png":
+        return FilePath
+    else:
+        print("CONVERTANYTOPNG: Formato non supportato per la conversione.")
+        return None
 
 def RecognitionFromFile(FilePath, name):
 
+    # Verifico che il file esista
+    if FilePath is None:
+        return False
+    
     # Leggo il database esistente o creo dict vuoto
     if os.path.exists(DATABASE_PATH) and os.path.getsize(DATABASE_PATH) > 0:
         with open(DATABASE_PATH, 'rb') as f:
@@ -34,35 +75,35 @@ def RecognitionFromFile(FilePath, name):
     with open(DATABASE_PATH, 'wb') as f:
         pickle.dump(all_face_encodings, f)
 
+    return True
 
 def FolderScan():
 
     #Cartelle del progetto
-
     if not os.path.exists(DATABASE_PATH):
     # creare il file vuoto (solo la prima volta)
         open(DATABASE_PATH, "wb").close()
-        print("Il database è stato creato")
+        print("FOLDERSCAN: Il database è stato creato")
 
-    # Conversione HEIC in PNG
-    for filename in os.listdir(HEIC_FOLDER):
-
-        heif.register_heif_opener()
-        full_path = os.path.join(HEIC_FOLDER, filename)
+    for filename in os.listdir(IMG_FOLDER):
+        # Prendo tutti gli elementi di IMG_FOLDER
+        full_path = os.path.join(IMG_FOLDER, filename)
         name, ext = os.path.splitext(filename)
+        print(f"FOLDERSCAN: Trovato file: {full_path},{filename} con estensione: {ext}")
+        PngPath = ConvertAnyToPng(full_path, name, ext)
 
-        filepng = f"{PNG_FOLDER}/{name}.png"
+        # Filtro per quelli che è possibile convertire
+        if PngPath is None:
+            print(f"FOLDERSCAN: Impossibile convertire il file: {filename}")
+            continue
+        else:
+            print(f"FOLDERSCAN: Scansione file: {PngPath}")
+            if (RecognitionFromFile(PngPath, name)):
+                continue
+            else:
+                print(f"FOLDERSCAN: Errore nella scansione del file: {filename}")
 
-        if not os.path.exists(filepng):
-            try: 
-                img = Image.open(full_path)
-                img.save(filepng, 'PNG')
-            except Exception as e:
-                print(f"Errore durante la conversione: {e}")
-
-    # Riconoscimento volti dalle immagini PNG
-    for filename in os.listdir(PNG_FOLDER):
-        full_path = os.path.join(PNG_FOLDER, filename)
-        name, ext = os.path.splitext(filename)
-        RecognitionFromFile(full_path, name)
+    temp = f"{IMG_FOLDER}/{TEMP_FOLDER}"
+    if not os.path.exists(temp):
+        os.remove(temp)
 
