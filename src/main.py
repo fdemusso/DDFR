@@ -1,19 +1,32 @@
+# Main file per l'esecuzione del riconoscimento facciale
 import face_recognition
 import cv2
-from PIL import Image
-import pillow_heif as heif
-import os
+
+# Moduli per la gestione delle variabili d'ambiente
+from dotenv import load_dotenv
+load_dotenv()
+
+# Moduli di terze parti
 import numpy as np
 import pickle
-import recognition
+
+# Moduli standard
 import logging
 import datetime
+import os
+import hashlib
+
+# Moduli custom
+import recognition
+import database
 
 # Directory per i file di log
 logger = logging.getLogger(__name__)
 
+
 # Valori < 0.6 rendono il modello più preciso
 TOLERANCE = 0.55
+CLEAN_DATABASE = os.getenv("CLEAN_DATABASE", "False").lower() in ("true", "1", "t")
 
 # Funzione per pulire il terminale
 def clear_terminal():
@@ -56,23 +69,53 @@ def main():
 
     # --- Fine configurazione dei log ---
 
+    # Loggo l'opzione di pulizia del database
+    if CLEAN_DATABASE:
+        logger.warning("Opzione di pulizia del database abilitata.")
+        
+        def database_outh():
+            password_input = input("Inserisci la password per pulire il database: ").strip()
+            hashed_input = hashlib.md5(password_input.encode()).hexdigest()
+            stored_hash = os.getenv("DATABASE_PASSWORD", "")
+
+            if hashed_input == stored_hash:
+                return True
+            else:
+                return False
+            
+        # Autentico l'utente admin del database
+        if database_outh():
+            database.clear_database()
+            logger.info("Database pulito all'avvio del programma.")
+        else:
+            print("Password errata. Terminazione del programma.")
+            logger.critical("Password per la pulizia del database errata. Terminazione del programma.")
+            return
+
+
+    # Connessione al database MongoDB
+    collection = database.get_collection()
+
+    if collection is None:
+        logger.critical("Connessione al database MongoDB non riuscita.")
+        return
+    
+
+
     webcam = cv2.VideoCapture(0)
     logger.info('Webcam inizializzata.')
     clear_terminal()
 
     # avvia scansione volti
-    recognition.FolderScan()
+    if (recognition.FolderScan(collection)):
+        logger.info("Scansione completa dispobibile nel main")
+    else:
+        logger.critical("Terminazione del programma a causa di un errore nella scansione delle immagini.")
+        return
 
     # Carico i volti dal database
 
-    try:
-        with open(recognition.DATABASE_PATH, 'rb') as f:
-            all_face_encodings = pickle.load(f)
-            logger.info(f"{recognition.DATABASE_PATH} caricato con successo.")
-    except FileNotFoundError:
-        logger.critical(f"Database non trovato: {recognition.DATABASE_PATH}")
-    except Exception as e:
-        logger.error(f"Si è verificato un altro errore: {e}")
+    all_face_encodings = database.fetch_all_encodings(collection)
 
     # Grab the list of names and the list of encodings
     

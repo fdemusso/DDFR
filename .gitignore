@@ -1,4 +1,10 @@
 logs/
+# mongodb log files
+*.log
+# database files
+database/
+mongod.out
+
 
 
 # Ignore image files
@@ -13,6 +19,7 @@ logs/
 HEIC/
 PNG/
 img/
+img/backup/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

@@ -1,56 +1,39 @@
 import face_recognition
-import cv2
 from PIL import Image
 import pillow_heif as heif
 import os
 import numpy as np
 import pickle
 import logging
+import database
+import hashlib
 
 # Percorso del database dei volti
 LOGS = 'logs'
-DATABASE_PATH = 'dataset_faces.dat'
 IMG_FOLDER = "Img"
 TEMP_FOLDER = "Temp"
 logger = logging.getLogger(__name__)
 
-def GetAllFaceEncodings():
-    # Leggo il database esistente o creo dict vuoto
-    if os.path.exists(DATABASE_PATH) and os.path.getsize(DATABASE_PATH) > 0:
-        with open(DATABASE_PATH, 'rb') as f:
-            all_face_encodings = pickle.load(f)
-    else:
-        all_face_encodings = {}
-    return all_face_encodings
+def hash_img(img):
+    img_hash = hashlib.md5(Image.open(img).tobytes())
+    return img_hash.hexdigest()
 
-def IsNameInDatabase(name):
+def compare_img(local_hash, collection):
 
-    all_face_encodings = GetAllFaceEncodings()
+    remote_hash = database.fetch_all_img_hash(collection)
 
-    face_names = list(all_face_encodings.keys())
-    if name in face_names:
-        logger.info(f"Volto di {name} già presente")
-        return True
-    else:
-        return False
+    for rh in remote_hash:
+        if local_hash == rh:
+            return True
+    
+    return False
 
 def ConvertAnyToPng(FilePath, name, ext):
-   
-    if IsNameInDatabase(name):
-        logger.debug(f"Volto di {name} già presente, salto la conversione.")
-        return None
+
+    filepng = f"{IMG_FOLDER}/{name}.png"
+    if ext.lower() == ".png" and filepng == FilePath:
+        return FilePath
     
-    filepng = f"{IMG_FOLDER}/{TEMP_FOLDER}/{name}.png"
-
-    if os.path.exists(filepng):
-        logger.info(f"File PNG temporaneo già esistente: {filepng}")
-        return filepng
-
-    #Creo la cartella per le immagini temporanee se non esiste
-    temp = f"{IMG_FOLDER}/{TEMP_FOLDER}"
-    if not os.path.exists(temp):
-        os.makedirs(temp)
-
     # Converto Heic in PNG
     if ext.lower() == ".heic":
         heif.register_heif_opener()
@@ -59,77 +42,104 @@ def ConvertAnyToPng(FilePath, name, ext):
             try: 
                 img = Image.open(FilePath)
                 img.save(filepng, 'PNG')
-                return filepng
+                
             except Exception as e:
                 logger.error(f"Errore durante la conversione: {e}")
                 return None
+            
+            # Rimuovo il file originale dopo la conversione
+            try:
+                if os.path.exists(FilePath):
+                    os.remove(FilePath)
+            except Exception as e:
+                logger.error(f"Errore durante la rimozione del file originale: {e}")
+        
+        return filepng
 
     # Converto Heic in PNG
     elif ext.lower() in [".jpg", ".jpeg", ".bmp", ".tiff", ".gif", ".png"]:
         img = Image.open(FilePath)
         img.save(filepng, 'PNG')
-        return filepng
+        # Rimuovo il file originale dopo la conversione
+        try:
+            if os.path.exists(FilePath):
+                    os.remove(FilePath)
+        except Exception as e:
+            logger.error(f"Errore durante la rimozione del file originale: {e}")
 
-     # Se è già PNG lo ritorno così com'è
-    elif ext.lower() == ".png":
-        return FilePath
+        return filepng
     else:
         logger.error("Formato non supportato per la conversione.")
         return None
 
-def RecognitionFromFile(FilePath, name):
+def RecognitionFromFile(collection, FilePath):
+
+        # Verifico la connessione al database MongoDB
+    if collection is None:
+        logger.error("Impossibile connettersi al database MongoDB per il riconoscimento dei volti.")
+        return False
 
     # Verifico che il file esista
-    if FilePath is None:
+    if os.path.exists(FilePath) is False:
+        logger.error(f"File non trovato: {FilePath}")
         return False
-    if not IsNameInDatabase(name):
-
-        all_face_encodings = GetAllFaceEncodings()
-        File_target = face_recognition.load_image_file(FilePath)
-        all_face_encodings[name] = face_recognition.face_encodings(File_target, num_jitters=100)[0]
-        logger.debug(f"{name}: Image Loaded. 128-dimension Face Encoding Generated.\n")
-    else:
+    
+    print(f"Elaborazione del file: {FilePath}")
+    
+    hash_value = hash_img(FilePath)
+    if compare_img(hash_value, collection):
+        print("Immagine già presente nel database")
+        logger.info(f"{FilePath} già presente nel database")
         return True
-    # Risalvo tutto il dict
-    with open(DATABASE_PATH, 'wb') as f:
-        pickle.dump(all_face_encodings, f)
-        logger.info(f"Database aggiornato con il volto di: {name}")
+    
+    # Scansiono il primo volto trovato nell'immagine
+    File_target = face_recognition.load_image_file(FilePath)
+    face = {
+        hash_value: face_recognition.face_encodings(File_target, num_jitters=100)[0]
+    }
+    logger.debug(f"{hash_value}: Image Loaded. 128-dimension Face Encoding Generated.\n")
 
-    try:
-        if os.path.exists(FilePath):
-            os.remove(FilePath)
-    except Exception as e:
-        logger.error(f"Errore durante la rimozione del file temporaneo: {e}")
-
-        
+    database.insert_person(face[hash_value], collection, hash_value)
 
     return True
 
-def FolderScan():
+def FolderScan(collection):
 
-    #Cartelle del progetto
-    if not os.path.exists(DATABASE_PATH):
-    # creare il file vuoto (solo la prima volta)
-        open(DATABASE_PATH, "wb").close()
-        logger.info("Il database è stato creato")
+    # Verifico la connessione al database MongoDB
+    if collection is None:
+        logger.critical("Connessione al database MongoDB non riuscita.")
+        return False
+    else:
+        logger.info("Connessione al database MongoDB riuscita.")
+    
+    imgs = os.listdir(IMG_FOLDER)
+    if not imgs:
+        logger.warning(f"Nessun file trovato nella cartella {IMG_FOLDER}.")
+        return False
+    
+    for img in imgs:
 
-    for filename in os.listdir(IMG_FOLDER):
         # Prendo tutti gli elementi di IMG_FOLDER
-        full_path = os.path.join(IMG_FOLDER, filename)
-        name, ext = os.path.splitext(filename)
+        path = os.path.join(IMG_FOLDER, img)
+        name, ext = os.path.splitext(img)
+
+        # Converto il file nel formato corretto
+        PngPath = ConvertAnyToPng(path, name, ext)
         
-        if IsNameInDatabase(name):
-            continue
-
-        logger.debug(f"Trovato file: {full_path},{filename} con estensione: {ext}")
-        PngPath = ConvertAnyToPng(full_path, name, ext)
-
         # Filtro per quelli che è possibile convertire
-        if PngPath is None:
-            continue
-        else:
-            if (RecognitionFromFile(PngPath, name)):
+        if PngPath is not None:
+            hash_value = hash_img(PngPath)
+            if compare_img(hash_value, collection):
                 continue
             else:
-                logger.error(f"Errore nella scansione del file: {filename}")
+                response = input(f"Vuoi aggiungere il volto in {path} al database? (s/n): ").strip().lower()
+                if response != 's':
+                    logger.info(f"Aggiunta del volto in {path} saltata dall'utente.")
+                    continue
 
+                elif (RecognitionFromFile(collection, PngPath) and response == 's'):
+                    continue
+                else:
+                    logger.error(f"Errore nella scansione del file: {img}")
+       
+    return True

@@ -10,6 +10,10 @@ pillow-heif
 numpy
 opencv-python
 
+
+pymongo
+python-dotenv
+
 # Per garantire compatibilità e installazione pulita
 wheel
 setuptools
