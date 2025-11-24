@@ -1,7 +1,10 @@
 # Main file per l'esecuzione del riconoscimento facciale
 import face_recognition
 import cv2
-from flask import Flask, Response, render_template
+
+# Moduli FastAPI
+from fastapi import FastAPI
+from fastapi.responses import StreamingResponse
 
 # Moduli per la gestione delle variabili d'ambiente
 from dotenv import load_dotenv
@@ -23,7 +26,7 @@ import database
 
 # Directory per i file di log
 logger = logging.getLogger(__name__)
-app = Flask(__name__)
+app = FastAPI()
 
 # Valori < 0.6 rendono il modello più preciso
 TOLERANCE = 0.55
@@ -33,8 +36,9 @@ CLEAN_DATABASE = os.getenv("CLEAN_DATABASE", "False").lower() in ("true", "1", "
 def clear_terminal():
     if os.name == "nt":       # Windows
         os.system("cls")
-    else:                     # macOS o Linux
-        os.system("clear")
+    else:    
+        return                 # macOS o Linux
+        #os.system("clear")
 
 
 
@@ -90,6 +94,10 @@ def webcamstream(collection):
 
         ret, frame = webcam.read()
 
+        if not ret:
+            logger.error("Impossibile leggere il frame dalla webcam.")
+            break
+
         #Riduco la risoluzione per velocizzare il processo
         small_frame = cv2.resize(frame, None, fx=0.20, fy=0.20)
         rgb_small_frame = cv2.cvtColor(small_frame, 4)
@@ -133,25 +141,17 @@ def webcamstream(collection):
             # Disegno il rettangolo attorno al volto
             writeretangle(frame, left, top, right, bottom, name)
 
-        # Mostro il video
-        #cv2.imshow("Video Feed", frame)
+        ret, buffer = cv2.imencode('.jpg', frame)
+        if not ret:
+            continue
+        frame = buffer.tobytes()
+        yield (b'--frame\r\n'
+               b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
+        
+    webcam.release()
 
-        # # Esco con 'q'
-        # if cv2.waitKey(1) & 0xFF == ord('q'):
-        #     logger.info('Chiusura del programma di riconoscimento facciale.')
-        #     break
-
-        if ret:
-            ret, buffer = cv2.imencode('.jpg', frame)
-            frame = buffer.tobytes()
-            yield (b'--frame\r\n'
-                b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
-        else:
-            webcam.release()
-            logger.info('Webcam rilasciata e tutte le finestre chiuse.')
-
-@app.route('/video_feed')
-def video_feed():
+@app.get("/video_feed")
+async def video_feed():
 
     # --- Inizio configurazione dei log ---
     if not os.path.exists(recognition.LOGS):
@@ -193,17 +193,9 @@ def video_feed():
     if collection is None:
         logger.critical("Connessione al database MongoDB non riuscita.")
         return
-    webcamstream(collection)
-    return Response(webcamstream(database.get_collection()),
-                    mimetype='multipart/x-mixed-replace; boundary=frame')
 
+    return StreamingResponse(webcamstream(collection), media_type='multipart/x-mixed-replace; boundary=frame')
 
 @app.route('/')
 def index():
-    return render_template('index.html')
-
-        # rilascio il controllo della webcam
-        # webcam.release()
-        # cv2.destroyAllWindows()
-        # logger.info('Webcam rilasciata e tutte le finestre chiuse.')
-
+    return "React frontend serves UI"
