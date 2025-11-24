@@ -1,0 +1,101 @@
+body {
+    margin: 0;
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    font-family: Arial, Helvetica, sans-serif;
+    background-color: #f7f7f7;
+}
+
+.cont {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    width: 70%;
+    text-align: center;
+    margin: 0 auto;
+}
+
+#Img_div {
+    border: 2px solid #333;
+    width: 100%;
+    height: 90%;
+    margin-top: 10px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    background-color: #fff;
+    padding: 12px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+#Img {
+    width: 100%;
+    height: auto;
+    border-radius: 4px;
+}
+
+#form {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    width: 60%;
+    text-align: center;
+    margin: 16px auto 0;
+    gap: 8px;
+}
+
+#form label {
+    text-align: left;
+    font-weight: 600;
+}
+
+#form input[type="text"] {
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+#form input[type="submit"] {
+    padding: 10px;
+    border: none;
+    border-radius: 4px;
+    background-color: #333;
+    color: #fff;
+    cursor: pointer;
+}
+
+#form input[type="submit"]:hover {
+    background-color: #555;
+}
+
+#avviso {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    gap: 12px;
+    margin-top: 12px;
+}
+
+h1 {
+    margin: 5px;
+}
+
+#Button {
+    border: none;
+    background-color: #ececec;
+    border-radius: 50%;
+    width: 48px;
+    height: 48px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+#Button i {
+    color: #333;
+    font-size: 24px;
+}
+
