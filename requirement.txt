@@ -10,7 +10,11 @@ pillow-heif
 numpy
 opencv-python
 
+# Per FastAPI e server ASGI
+fastapi
+uvicorn[standard]
 
+# Database e gestione ambiente
 pymongo
 python-dotenv
 

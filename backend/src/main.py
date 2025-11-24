@@ -69,7 +69,7 @@ def webcamstream(collection):
 
     # avvia scansione volti
     if (recognition.FolderScan(collection)):
-        logger.info("Scansione completa dispobibile nel main")
+        logger.info("Scansione completa dispobibile nel webcamstream")
     else:
         logger.critical("Terminazione del programma a causa di un errore nella scansione delle immagini.")
         return
@@ -150,6 +150,9 @@ def webcamstream(collection):
         
     webcam.release()
 
+# Endpoint per lo streaming video, inzializzo i log e i database, ottengo i dati per il riconoscimento facciale dopo di che lancio 
+# webcamstream che gestisce il riconoscimento facciale in tempo reale.
+
 @app.get("/video_feed")
 async def video_feed():
 
@@ -167,6 +170,7 @@ async def video_feed():
     if CLEAN_DATABASE:
         logger.warning("Opzione di pulizia del database abilitata.")
         
+        # Funzione per l'autenticazione dell'admin del database TODO: Spostare in un endpoint separato
         def database_outh():
             password_input = input("Inserisci la password per pulire il database: ").strip()
             hashed_input = hashlib.md5(password_input.encode()).hexdigest()
@@ -194,6 +198,7 @@ async def video_feed():
         logger.critical("Connessione al database MongoDB non riuscita.")
         return
 
+    # Avvio lo streaming della webcam con il riconoscimento facciale
     return StreamingResponse(webcamstream(collection), media_type='multipart/x-mixed-replace; boundary=frame')
 
 @app.route('/')
