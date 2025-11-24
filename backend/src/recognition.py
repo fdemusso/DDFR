@@ -9,9 +9,9 @@ import database
 import hashlib
 
 # Percorso del database dei volti
-LOGS = 'logs'
-IMG_FOLDER = "Img"
-TEMP_FOLDER = "Temp"
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+LOGS = os.path.normpath(os.path.join(BASE_DIR, "..", "logs"))
+IMG_FOLDER = os.path.normpath(os.path.join(BASE_DIR, "..", "Img"))
 logger = logging.getLogger(__name__)
 
 def hash_img(img):
@@ -111,7 +111,7 @@ def FolderScan(collection):
         return False
     else:
         logger.info("Connessione al database MongoDB riuscita.")
-    
+
     imgs = os.listdir(IMG_FOLDER)
     if not imgs:
         logger.warning(f"Nessun file trovato nella cartella {IMG_FOLDER}.")

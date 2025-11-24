@@ -1,6 +1,7 @@
 # Main file per l'esecuzione del riconoscimento facciale
 import face_recognition
 import cv2
+from flask import Flask, Response, render_template
 
 # Moduli per la gestione delle variabili d'ambiente
 from dotenv import load_dotenv
@@ -22,7 +23,7 @@ import database
 
 # Directory per i file di log
 logger = logging.getLogger(__name__)
-
+app = Flask(__name__)
 
 # Valori < 0.6 rendono il modello più preciso
 TOLERANCE = 0.55
@@ -34,6 +35,7 @@ def clear_terminal():
         os.system("cls")
     else:                     # macOS o Linux
         os.system("clear")
+
 
 
 def writeretangle(frame, left, top, right, bottom, name):
@@ -56,52 +58,7 @@ def writeretangle(frame, left, top, right, bottom, name):
         #Verde per i riconosciuti        
         block(0,255,0)
 
-
-def main():
-
-    # --- Inizio configurazione dei log ---
-    if not os.path.exists(recognition.LOGS):
-        os.makedirs(recognition.LOGS)
-
-    time = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
-    logging.basicConfig(filename=f"{recognition.LOGS}/{time}.log", level=logging.INFO)
-    logger.info('Avviato il programma di riconoscimento facciale.')
-
-    # --- Fine configurazione dei log ---
-
-    # Loggo l'opzione di pulizia del database
-    if CLEAN_DATABASE:
-        logger.warning("Opzione di pulizia del database abilitata.")
-        
-        def database_outh():
-            password_input = input("Inserisci la password per pulire il database: ").strip()
-            hashed_input = hashlib.md5(password_input.encode()).hexdigest()
-            stored_hash = os.getenv("DATABASE_PASSWORD", "")
-
-            if hashed_input == stored_hash:
-                return True
-            else:
-                return False
-            
-        # Autentico l'utente admin del database
-        if database_outh():
-            database.clear_database()
-            logger.info("Database pulito all'avvio del programma.")
-        else:
-            print("Password errata. Terminazione del programma.")
-            logger.critical("Password per la pulizia del database errata. Terminazione del programma.")
-            return
-
-
-    # Connessione al database MongoDB
-    collection = database.get_collection()
-
-    if collection is None:
-        logger.critical("Connessione al database MongoDB non riuscita.")
-        return
-    
-
-
+def webcamstream(collection):
     webcam = cv2.VideoCapture(0)
     logger.info('Webcam inizializzata.')
     clear_terminal()
@@ -177,17 +134,76 @@ def main():
             writeretangle(frame, left, top, right, bottom, name)
 
         # Mostro il video
-        cv2.imshow("Video Feed", frame)
+        #cv2.imshow("Video Feed", frame)
 
-        # Esco con 'q'
-        if cv2.waitKey(1) & 0xFF == ord('q'):
-            logger.info('Chiusura del programma di riconoscimento facciale.')
-            break
+        # # Esco con 'q'
+        # if cv2.waitKey(1) & 0xFF == ord('q'):
+        #     logger.info('Chiusura del programma di riconoscimento facciale.')
+        #     break
 
-    # rilascio il controllo della webcam
-    webcam.release()
-    cv2.destroyAllWindows()
-    logger.info('Webcam rilasciata e tutte le finestre chiuse.')
+        if ret:
+            ret, buffer = cv2.imencode('.jpg', frame)
+            frame = buffer.tobytes()
+            yield (b'--frame\r\n'
+                b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
+        else:
+            webcam.release()
+            logger.info('Webcam rilasciata e tutte le finestre chiuse.')
 
-if __name__ == "__main__":
-    main()
+@app.route('/video_feed')
+def video_feed():
+
+    # --- Inizio configurazione dei log ---
+    if not os.path.exists(recognition.LOGS):
+        os.makedirs(recognition.LOGS)
+
+    time = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
+    logging.basicConfig(filename=f"{recognition.LOGS}/{time}.log", level=logging.INFO)
+    logger.info('Avviato il programma di riconoscimento facciale.')
+
+    # --- Fine configurazione dei log ---
+
+    # Loggo l'opzione di pulizia del database
+    if CLEAN_DATABASE:
+        logger.warning("Opzione di pulizia del database abilitata.")
+        
+        def database_outh():
+            password_input = input("Inserisci la password per pulire il database: ").strip()
+            hashed_input = hashlib.md5(password_input.encode()).hexdigest()
+            stored_hash = os.getenv("DATABASE_PASSWORD", "")
+
+            if hashed_input == stored_hash:
+                return True
+            else:
+                return False
+            
+        # Autentico l'utente admin del database
+        if database_outh():
+            database.clear_database()
+            logger.info("Database pulito all'avvio del programma.")
+        else:
+            print("Password errata. Terminazione del programma.")
+            logger.critical("Password per la pulizia del database errata. Terminazione del programma.")
+            return
+
+
+    # Connessione al database MongoDB
+    collection = database.get_collection()
+
+    if collection is None:
+        logger.critical("Connessione al database MongoDB non riuscita.")
+        return
+    webcamstream(collection)
+    return Response(webcamstream(database.get_collection()),
+                    mimetype='multipart/x-mixed-replace; boundary=frame')
+
+
+@app.route('/')
+def index():
+    return render_template('index.html')
+
+        # rilascio il controllo della webcam
+        # webcam.release()
+        # cv2.destroyAllWindows()
+        # logger.info('Webcam rilasciata e tutte le finestre chiuse.')
+
