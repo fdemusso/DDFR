@@ -11,9 +11,9 @@ class DatabaseSettings(BaseSettings):
         env_prefix = "DB_"
         env_file = ".env"
 
-class LoggingSettings(BaseSettings):
+class PathSettings(BaseSettings):
     logfolder: str = os.path.join(os.path.dirname(os.path.abspath(__file__)), "logs")
-
+    imgsfolder: str = os.path.join(os.path.dirname(os.path.abspath(__file__)), "img")
     class Config:
         env_prefix = "LOG_"
         env_file = ".env"
@@ -26,8 +26,9 @@ class APISettings(BaseSettings):
 
     class Config:
         env_file = ".env"
+ 
 
 # Istanze globali da importare
 database_settings = DatabaseSettings()
-logging_settings = LoggingSettings()
+path_settings = PathSettings()
 api_settings = APISettings()

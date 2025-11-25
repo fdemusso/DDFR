@@ -14,6 +14,7 @@ class Database():
         self.url = url
         self.name_db = name
         self.collection_name = collection
+        self.get_connection(self.url)
 
     @property
     def is_connected(self):

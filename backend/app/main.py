@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from app.api.routes import router
-from app.config import logging_settings, api_settings
+from app.config import path_settings, api_settings
 
 import logging
 import os
@@ -8,8 +8,8 @@ from datetime import datetime
 from contextlib import asynccontextmanager
 
 # Configurazione del logging
-os.makedirs(logging_settings.log_folder, exist_ok=True)
-log_filename = os.path.join(logging_settings.log_folder, f"app-{datetime.now().strftime('%Y%m%d-%H%M%S')}.log")
+os.makedirs(path_settings.log_folder, exist_ok=True)
+log_filename = os.path.join(path_settings.log_folder, f"app-{datetime.now().strftime('%Y%m%d-%H%M%S')}.log")
 
 logging.basicConfig(
     level=logging.INFO,
