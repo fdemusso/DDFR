@@ -1,12 +1,14 @@
 import React from 'react';
+import './components/components.jsx';
 
 function App() {
   return (
     <div className="App">
       <div className="camera">
-        {/* Video MJPEG stream dal backend FastAPI */}
-        <img src="http://localhost:8000/video_feed" alt="Video Feed" />
-        <button>SNAP!</button>
+        {/* <CameraComponent /> */}
+      </div>
+      <div className="chat">
+        {/* <ChatContainer /> */}
       </div>
     </div>
   );
