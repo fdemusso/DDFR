@@ -8,12 +8,12 @@ logger = logging.getLogger(__name__)
 
 class ImgValidation:
 
-    def __init__(self, path):
+    def __init__(self, path: str, delete : bool = False):
         self.path = None
         self.name = None
         self.ext = None
         self.hash = None
-        self.normalize_img(path)
+        self.normalize_img(path, delete)
 
 
     @property
@@ -22,7 +22,7 @@ class ImgValidation:
 
     
     @staticmethod
-    def ConvertAnyToPng(path, name, ext):
+    def ConvertAnyToPng(path:str, name:str, ext:str, delete: bool = False):
         ext = ext.lower()
         filepng = f"{path_settings.imgsfolder}/{name}.png"
 
@@ -49,15 +49,16 @@ class ImgValidation:
 
         # Provo a rimuovere l'originale
         try:
-            if os.path.exists(path):
+            if os.path.exists(path) and delete == True:
                 os.remove(path)
+                logger.debug(f"Rimosso {path}")
         except Exception as e:
-            logger.error(f"Errore durante la rimozione del file originale: {e}")
+            logger.error(f"Errore durante la rimozione {path} originale: {e}")
 
         return filepng
 
     @staticmethod
-    def validate_png(path):
+    def validate_png(path: str):
         if path is None or not os.path.exists(path):
             return False  
         name, ext = os.path.splitext(path)
@@ -66,7 +67,7 @@ class ImgValidation:
         return False
 
     @staticmethod
-    def hash_img(path):
+    def hash_img(path:str):
         if not ImgValidation.validate_png(path):
             return None
         
@@ -74,13 +75,16 @@ class ImgValidation:
         return img_hash.hexdigest()
     
 
-    def normalize_img(self, path):
+    def normalize_img(self, path : str, delete):
 
         if not os.path.exists(path):
             return False
         
+        if delete is None:
+            delete = False
+        
         name, ext = os.path.splitext(path)
-        filepng = ImgValidation.ConvertAnyToPng(path, name, ext)
+        filepng = ImgValidation.ConvertAnyToPng(path, name, ext, delete)
         if ImgValidation.validate_png(filepng):
             hash = ImgValidation.hash_img(filepng)
             name, ext = os.path.splitext(filepng)
@@ -93,10 +97,13 @@ class ImgValidation:
         return False
     
     def compare_img(self, path):
+        if not self.is_valid :
+            logger.warning(f"{self.path} non è un percorso valido")
+            return False
+        
         img = ImgValidation(path)
         if img.is_valid and (self.hash == img.hash):
             return True
-
         return False
 
 

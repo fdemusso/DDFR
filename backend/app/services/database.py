@@ -25,9 +25,9 @@ class Database():
         if cls.current_client is None:
             try:
                 cls.current_client = pymongo.MongoClient(url)
-                print("Connessione al database avvenuta con successo.")
+                logger.info("Connessione al database avvenuta con successo.")
             except pymongo.errors.ConnectionError as e:
-                print(f"Errore di connessione al database: {e}")
+                logger.critical(f"Errore di connessione al database: {e}")
                 raise
         return cls.current_client
     
@@ -36,7 +36,7 @@ class Database():
         if cls.current_client is not None:
             cls.current_client.close()
             cls.current_client = None
-            print("Connessione al database chiusa.")
+            logger.info("Connessione al database chiusa.")
     
     @staticmethod
     def convert_to_objectid(id_string: str):
