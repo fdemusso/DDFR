@@ -2,6 +2,7 @@ import face_recognition
 import logging
 import os
 from database import Database
+from utils.img import ImgValidation
 logger = logging.getLogger(__name__)
 
 class FaceSystem():
@@ -11,7 +12,7 @@ class FaceSystem():
     def __init__(self, db_instance: Database):
         self.known_face_names=[]
         self.known_face_encodings=[]
-        self.client = db_instance
+        self.client : Database = db_instance
         self.load_database()
 
 
@@ -54,28 +55,35 @@ class FaceSystem():
                 
         except Exception as e:
             logger.error(f"Errore critico durante il caricamento dal DB: {e}")
+            
 
-    
-    def recognize_from_img(self, path, person_data: dict):
+    def recognize_from_img(self, path, person_data: dict, remove_img : bool = False):
 
         #TODO: validare person_data
-        #TODO: validare il formato di path
+        
+        
+        img  = ImgValidation(path, remove_img)
+
         if not self.is_operational:
             return False
         
-        if not ({person_data.encoding : None}):
+        if (person_data.get("encoding", None) is not None):
             logger.warning("Passato encoding già calcolato")
             return False
         
-        if not os.path.exists(path):
-            logger.warning(f"Passato percorso non valido per {person_data: name}")
+        if img.is_valid:
+            logger.warning(f"Passato percorso non valido per {person_data.get("name", "Unknow")}")
             return False
 
-        target = face_recognition.load_image_file(path)
+        target = face_recognition.load_image_file(img.path)
         face = {
-            #hash_value: face_recognition.face_encodings(target, num_jitters=100)[0]
+            img.hash: face_recognition.face_encodings(target, num_jitters=100)[0]
         }
-        #logger.debug(f"{hash_value}: Image Loaded. 128-dimension Face Encoding Generated.\n")
+        logger.debug(f"{img.hash}: Image Loaded. 128-dimension Face Encoding Generated.\n")
+
+        # Inserimento nel database
+        # TODO: aggiungere HASH
+        # TODO: aggiunge encoding
 
 
 

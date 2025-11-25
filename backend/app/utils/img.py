@@ -20,7 +20,6 @@ class ImgValidation:
     def is_valid(self):
         return self.path is not None and self.name is not None and self.ext is not None and self.hash is not None 
 
-    
     @staticmethod
     def ConvertAnyToPng(path:str, name:str, ext:str, delete: bool = False):
         ext = ext.lower()
@@ -73,7 +72,6 @@ class ImgValidation:
         
         img_hash = hashlib.md5(Image.open(path).tobytes())
         return img_hash.hexdigest()
-    
 
     def normalize_img(self, path : str, delete):
 
