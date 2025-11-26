@@ -47,7 +47,7 @@ class Database():
             return None
     
     @staticmethod
-    def normalize_doc(doc: dict) -> dict:
+    def normalize_doc(doc: dict) -> dict: #TODO: Supportare la nuova person
         if doc is None:
             return None
         doc["id"] = str(doc["_id"])
@@ -59,7 +59,7 @@ class Database():
         db = client[self.name_db] 
         return db[self.collection_name]
     
-    def add_person(self, person_data: dict):
+    def add_person(self, person_data: dict): #TODO: Supportare la nuova person
         collection = self.get_collection()
         name = person_data.get("name", "Unknown")
         surname = person_data.get("surname", "Unknown")
@@ -103,7 +103,7 @@ class Database():
             logger.warning(f"Nessuna persona trovata con ID {person_id}.")
             return False
     
-    def get_all_people(self):
+    def get_all_people(self): #TODO: Supportare la nuova person
         collection = self.get_collection()
         cursor = collection.find()
         return [self.normalize_doc(doc) for doc in cursor]
@@ -145,7 +145,7 @@ class Database():
             return False
         
 
-    def get_all_encodings(self):
+    def get_all_encodings(self): #TODO: Supportare la nuova person
         people = self.get_all_people()
         
         known_encodings = []
