@@ -1,4 +1,5 @@
 import pymongo
+from pymongo.errors import DuplicateKeyError, WriteConcernError, ConnectionFailure
 import logging
 import numpy as np
 from bson import ObjectId, errors 
@@ -38,7 +39,7 @@ class Database():
             cls.current_client = None
             logger.info("Connessione al database chiusa.")
     
-    @staticmethod
+    @staticmethod #TODO: Antonell ha bisogno di un metodo pubblico per convertire id in stringa
     def convert_to_objectid(id_string: str):
         try:
             return ObjectId(id_string)
@@ -60,11 +61,30 @@ class Database():
     
     def add_person(self, person_data: dict):
         collection = self.get_collection()
-        result = collection.insert_one(person_data)
         name = person_data.get("name", "Unknown")
         surname = person_data.get("surname", "Unknown")
-        logger.debug(f"Utente:{name} {surname} aggiunto al database con ID: {result.inserted_id}")
-        return str(result.inserted_id)
+
+        try:
+            result = collection.insert_one(person_data)
+            logger.debug(f"Utente:{name} {surname} aggiunto al database con ID: {result.inserted_id}")
+            return str(result.inserted_id)
+
+        except DuplicateKeyError as e:
+            logger.error(f"Impossibile inserire. Chiave duplicata rilevata: {e}")
+            return None
+
+        except WriteConcernError as e:
+            logger.critical(f"Errore di scrittura: {e}")
+            return None
+
+        except ConnectionFailure as e:
+            logger.critical(f"ERRORE DI CONNESSIONE: Il database non è raggiungibile: {e}")
+            return None
+
+        except Exception as e:
+            logger.error(f"Errore sconosciuto durante l'inserimento: {e}")
+            return None
+        
     
     def remove_person(self, person_id: str) -> bool:
         collection = self.get_collection()
@@ -136,13 +156,18 @@ class Database():
             surname = person.get("surname", "Unknown")
             full_name = f"{name} {surname}"
             
-            encoding_list = person.get("encoding", [])
+            face_encodings_dict = person.get("encoding", {})
+            if not face_encodings_dict:
+                logger.warning(f"{full_name} risulta vuoto")
+                continue
 
-            if encoding_list:
-                known_names.append(full_name)
-                known_encodings.append(np.array(encoding_list))
-            else:
-                logger.warning(f"Nessuna codifica per {full_name}")
+            for hash_key, encoding_list in face_encodings_dict.items():
+                try: 
+                    known_encodings.append(np.array(encoding_list))
+                    known_names.append(full_name)
+                except Exception as e:
+                    logger.error(f"Saltato encoding corrotto per {full_name} (Hash: {hash_key}). Causa: {e}")
+                    continue
 
         return known_names, known_encodings
     
