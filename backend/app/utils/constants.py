@@ -27,4 +27,4 @@ class RelationshipType(str, Enum):
 
 class RoleType(str, Enum):
     USER = "user"
-    GUEST = "Guest"
+    GUEST = "guest"

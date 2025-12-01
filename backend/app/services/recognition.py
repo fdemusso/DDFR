@@ -1,9 +1,9 @@
 import face_recognition
 import logging
 import os
-from database import Database
-from utils.img import ImgValidation
-from models.person import Person
+from app.services.database import Database
+from app.utils.img import ImgValidation
+from app.models.person import Person
 logger = logging.getLogger(__name__)
 
 class FaceSystem():
@@ -18,7 +18,7 @@ class FaceSystem():
 
     @property
     def is_connected(self):
-        return self.client is not None and self.client.is_connected()
+        return self.client is not None and self.client.is_connected
     
     @property
     def dataset_integrity(self):
@@ -50,7 +50,7 @@ class FaceSystem():
 
             if self.is_operational:
                 logger.info(f"FaceSystem avviato correttamente")
-            else:
+            elif not self.is_operational:
                 logger.warning("FaceSystem avviato ma NON operativo (vedi errori sopra).")
                 
         except Exception as e:
@@ -100,16 +100,21 @@ class FaceSystem():
         person_data["encoding"] = face
 
         # Inserimento nel DB
-        # TODO: Gestire il caso in cui la persona esista già
         try:
-            inserted_id = self.client.add_person(person_data)
-            if inserted_id is None:
-                logger.warning("Impossibile aggiungere la persona (add_person ha restituito None)")
-                return False
+            if person_data.id is  None:     
+                inserted_id = self.client.add_person(person_data)
+                if inserted_id is None:
+                    logger.warning("Impossibile aggiungere la persona (add_person ha restituito None)")
+                    return False                
+            else: 
+                updated_person = self.client.update_person(str(person_data.id), person_data)
+                if updated_person is None:
+                    logger.warning("Impossibile aggiornare la persona (update_person ha restituito None)")
+                    return False   
+                            
         except Exception as e:
-            logger.error(f"Errore durante salvataggio DB: {e}")
-            return False
-
+                logger.error(f"Errore durante salvataggio DB: {e}")
+                return False
         return True
 
 

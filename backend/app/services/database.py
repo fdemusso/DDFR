@@ -5,9 +5,10 @@ import numpy as np
 import pymongo
 from bson import ObjectId, errors
 from pymongo import ReturnDocument
-from pymongo.errors import DuplicateKeyError, WriteConcernError, ConnectionFailure
-
+from pymongo.errors import DuplicateKeyError, WriteConcernError, ConnectionFailure, ServerSelectionTimeoutError
+from datetime import datetime, date
 from app.models.person import Person  
+from pymongo.uri_parser import parse_uri
 from app.utils.constants import RoleType  
 
 logger = logging.getLogger(__name__)
@@ -24,21 +25,88 @@ class Database():
         self.collection_name = collection
         self.get_connection(self.url)
 
+        # Revisione dell'architettura del database, potrebbe generare problemi
+        self.patient: Optional[Person] = None
+        self.patient = self.check_patient_existence()
+
     @property
     def is_connected(self):
-        return self.current_client is not None
+        if self.current_client is None:
+            return False
+        try:
+            self.current_client.admin.command('ping')
+            return True      
+        except (ConnectionFailure, ServerSelectionTimeoutError):
+            # Se il server non risponde o scade il tempo
+            return False
+
+    def check_patient_existence(self) -> Optional[Person] | None:
+        # Usa getattr per gestire il caso in cui l'attributo `patient`
+        # non venga inizializzato nel costruttore.
+        cached_patient: Optional[Person] = getattr(self, "patient", None)
+        if cached_patient is not None:
+            return cached_patient
+        
+        collection = self.get_collection()
+        query = {"role": RoleType.USER.value}
+        doc = collection.find_one(query)
+        patient = self._person_from_doc(doc)
+        if patient:
+            logger.info(f"Paziente esistente trovato nel DB: {patient.name} {patient.surname}")
+            # Manteniamo la cache in memoria se possibile
+            self.patient = patient
+        return patient
 
     @classmethod
     def get_connection(cls, url):
+        if url is None:
+            logger.error("URL di connessione non fornito.")
+            return None
+        
+        # CASO 1: Nessuna connessione esistente -> Creala
         if cls.current_client is None:
             try:
                 cls.current_client = pymongo.MongoClient(url)
-                logger.info("Connessione al database avvenuta con successo.")
-            except pymongo.errors.ConnectionError as e:
-                logger.critical(f"Errore di connessione al database: {e}")
+                # Test immediato (ping) per evitare connessioni fantasma
+                cls.current_client.admin.command('ping')
+                logger.info(f"Connessione al database stabilita su: {url}")
+            except (pymongo.errors.ConnectionFailure, pymongo.errors.ConfigurationError) as e:
+                logger.critical(f"Errore critico di connessione al database: {e}")
+                cls.current_client = None # Resetta per evitare stati sporchi
                 raise
+        
+        # CASO 2: Connessione esistente -> Verifica se l'URL è lo stesso
+        else:
+            try:
+                # Parsiamo l'URL stringa che ci è arrivato per estrarre (host, port)
+                parsed_uri = parse_uri(url)
+                # La lista 'nodelist' contiene tuple [(host, port), ...]
+                new_nodes = set(parsed_uri['nodelist'])
+                
+                # Otteniamo l'indirizzo della connessione attiva
+                # NOTE: .address può essere None se la connessione è stata persa o non ancora stabilita
+                current_node = cls.current_client.address 
+                
+                # Confronto
+                # Se l'indirizzo attivo non è tra quelli richiesti nel nuovo URL
+                if current_node and current_node not in new_nodes:
+                    error_msg = (
+                        f"Connessione già esistente con un host diverso.\n"
+                        f"Attivo: {current_node}\n"
+                        f"Richiesto: {new_nodes} (da {url})"
+                    )
+                    logger.warning(error_msg)
+                    raise ValueError(error_msg)
+                
+                # Se siamo qui, l'URL è compatibile, restituiamo il client esistente
+                
+            except Exception as e:
+                logger.error(f"Errore durante la verifica dell'URL esistente: {e}")
+
         return cls.current_client
     
+
+
     @classmethod
     def close_connection(cls):
         if cls.current_client is not None:
@@ -49,17 +117,34 @@ class Database():
     #Formattazione degli id di mongodb
     @staticmethod
     def convert_to_objectid(id_string: str) -> Optional[ObjectId]:
+        if id_string is None:
+             return None
         try:
             return ObjectId(id_string)
         except (errors.InvalidId, TypeError):
+            logger.error(f"ID non valido per ObjectId: {id_string}")
             return None
     
     @staticmethod
     def _person_to_document(person: Person) -> dict:
-        """Serializza un oggetto Person per Mongo, rimuovendo _id vuoti."""
+        """Serializza un oggetto Person per Mongo, gestendo date ed Enums."""
+        
         person_dict = person.model_dump(by_alias=True, exclude_none=True)
+        
         if person_dict.get("_id") is None:
             person_dict.pop("_id", None)
+
+        # Converti date in datetime (Fix per Mongo)
+        if "birthday" in person_dict:
+            b_day = person_dict["birthday"]
+            # Controlliamo se è strettamente un oggetto date (e non già datetime)
+            if type(b_day) == date:
+                person_dict["birthday"] = datetime(b_day.year, b_day.month, b_day.day)
+
+        for key, value in person_dict.items():
+            if hasattr(value, "value"):  
+                person_dict[key] = value.value
+
         return person_dict
 
     @staticmethod
@@ -74,18 +159,32 @@ class Database():
             return None
     
     def get_collection(self):
-        client = self.get_connection(self.url)
+        client = None
+        try :
+            client = self.get_connection(self.url)
+        except Exception as e:
+            logger.critical(f"Impossibile collegarsi al database per ottenere la collezione: {e}")
+            return None
+        
         db = client[self.name_db] 
         return db[self.collection_name]
     
-    def add_person(self, person: Person) -> Optional[Person]:
+    def add_person(self, person: Person) -> Optional[Person] | None:
         collection = self.get_collection()
         person_dict = self._person_to_document(person)
 
+        # --- VALIDAZIONE PAZIENTE ---
+        # Gestisce correttamente il caso in cui `self.patient` non esista ancora.
+        if person.role == RoleType.USER:
+            if getattr(self, "patient", None) is not None:
+                logger.error("Impossibile inserire. Esiste già un paziente registrato.")
+                return None
         try:
             result = collection.insert_one(person_dict)
             
             person.id = str(result.inserted_id)
+            if person.role == RoleType.USER:
+                self.patient = person  
             
             logger.debug(f"Utente: {person.name} {person.surname} aggiunto al database con ID: {result.inserted_id}")
             return person
@@ -122,15 +221,19 @@ class Database():
     def remove_person(self, person_id: str) -> bool:
         collection = self.get_collection()
 
-        oid = self.convert_to_objectid(person_id)
+        oid = Database.convert_to_objectid(person_id)
         if oid is None:
-            logger.warning(f"ID non valido: {person_id}")
+            logger.warning(f"ID non valido per la rimozione: {person_id}")
             return False
 
         result = collection.delete_one({"_id": oid})
 
         if result.deleted_count > 0:
             logger.info(f"Persona con ID {person_id} rimossa correttamente.")
+            # Se abbiamo una cache del paziente e coincide con l'ID rimosso, azzeriamola
+            cached_patient: Optional[Person] = getattr(self, "patient", None)
+            if cached_patient is not None and str(cached_patient.id) == person_id:
+                self.patient = None
             return True
         else:
             logger.warning(f"Nessuna persona trovata con ID {person_id}.")
@@ -148,9 +251,9 @@ class Database():
 
     def get_person(self, person_id: str) -> Optional[Person]:
         collection = self.get_collection()
-        oid = self.convert_to_objectid(person_id)
+        oid = Database.convert_to_objectid(person_id)
         if oid is None:
-            logger.warning(f"ID non valido: {person_id}")
+            logger.warning(f"ID non valido per il recupero dei dati: {person_id}")
             return None
         doc = collection.find_one({"_id": oid})
         return self._person_from_doc(doc)
@@ -158,7 +261,7 @@ class Database():
     def update_person(self, person_id: str, update_data: Person | dict) -> Optional[Person]:
         collection = self.get_collection()
 
-        oid = self.convert_to_objectid(person_id)
+        oid = Database.convert_to_objectid(person_id)
         if oid is None:
             logger.warning(f"ID non valido per aggiornamento: {person_id}")
             return None
@@ -242,6 +345,9 @@ class Database():
         client = self.get_connection(self.url)
         client.drop_database(self.name_db) 
         logger.info(f"Database '{self.name_db}' eliminato con successo.")
+        # Reset di eventuale stato in memoria relativo al paziente
+        if hasattr(self, "patient"):
+            self.patient = None
         self.close_connection()
         logger.info(f"Connessione con {self.url} terminata.")
 
