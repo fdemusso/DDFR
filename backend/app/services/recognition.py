@@ -3,11 +3,11 @@ import logging
 import os
 from database import Database
 from utils.img import ImgValidation
+from models.person import Person
 logger = logging.getLogger(__name__)
 
 class FaceSystem():
 
-    
 
     def __init__(self, db_instance: Database):
         self.known_face_names=[]
@@ -57,10 +57,11 @@ class FaceSystem():
             logger.error(f"Errore critico durante il caricamento dal DB: {e}")
             
 
-    # Bisogna passare una lista di path DELLA STESSA PERSONA
-def recognize_from_img(self, paths : list, person_data: dict, remove_img : bool = False):
+    # Person dovrebbe essere passato per rifermimento
+    # Person rappresenta una singola persona
+    def recognize_from_img(self, paths : list, person_data: Person, remove_img : bool = False):
 
-        #TODO: validare person_data
+
         if not self.is_operational:
             return False
         
@@ -99,6 +100,7 @@ def recognize_from_img(self, paths : list, person_data: dict, remove_img : bool 
         person_data["encoding"] = face
 
         # Inserimento nel DB
+        # TODO: Gestire il caso in cui la persona esista già
         try:
             inserted_id = self.client.add_person(person_data)
             if inserted_id is None:

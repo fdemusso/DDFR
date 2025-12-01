@@ -1,8 +1,15 @@
-import pymongo
-from pymongo.errors import DuplicateKeyError, WriteConcernError, ConnectionFailure
 import logging
+from typing import Optional
+
 import numpy as np
-from bson import ObjectId, errors 
+import pymongo
+from bson import ObjectId, errors
+from pymongo import ReturnDocument
+from pymongo.errors import DuplicateKeyError, WriteConcernError, ConnectionFailure
+
+from app.models.person import Person  
+from app.utils.constants import RoleType  
+
 logger = logging.getLogger(__name__)
 
 class Database():
@@ -39,51 +46,77 @@ class Database():
             cls.current_client = None
             logger.info("Connessione al database chiusa.")
     
-    @staticmethod #TODO: Antonell ha bisogno di un metodo pubblico per convertire id in stringa
-    def convert_to_objectid(id_string: str):
+    #Formattazione degli id di mongodb
+    @staticmethod
+    def convert_to_objectid(id_string: str) -> Optional[ObjectId]:
         try:
             return ObjectId(id_string)
         except (errors.InvalidId, TypeError):
             return None
     
     @staticmethod
-    def normalize_doc(doc: dict) -> dict: #TODO: Supportare la nuova person
+    def _person_to_document(person: Person) -> dict:
+        """Serializza un oggetto Person per Mongo, rimuovendo _id vuoti."""
+        person_dict = person.model_dump(by_alias=True, exclude_none=True)
+        if person_dict.get("_id") is None:
+            person_dict.pop("_id", None)
+        return person_dict
+
+    @staticmethod
+    def _person_from_doc(doc: Optional[dict]) -> Optional[Person]:
+        """Ricostruisce un Person da un documento Mongo."""
         if doc is None:
             return None
-        doc["id"] = str(doc["_id"])
-        del doc["_id"]
-        return doc
+        try:
+            return Person.model_validate(doc)
+        except Exception as exc:
+            logger.error(f"Documento Person non valido: {exc}")
+            return None
     
     def get_collection(self):
         client = self.get_connection(self.url)
         db = client[self.name_db] 
         return db[self.collection_name]
     
-    def add_person(self, person_data: dict): #TODO: Supportare la nuova person
+    def add_person(self, person: Person) -> Optional[Person]:
         collection = self.get_collection()
-        name = person_data.get("name", "Unknown")
-        surname = person_data.get("surname", "Unknown")
+        person_dict = self._person_to_document(person)
 
         try:
-            result = collection.insert_one(person_data)
-            logger.debug(f"Utente:{name} {surname} aggiunto al database con ID: {result.inserted_id}")
-            return str(result.inserted_id)
+            result = collection.insert_one(person_dict)
+            
+            person.id = str(result.inserted_id)
+            
+            logger.debug(f"Utente: {person.name} {person.surname} aggiunto al database con ID: {result.inserted_id}")
+            return person
 
+        # --- GESTIONE ERRORI CON ROLLBACK ---
+        
         except DuplicateKeyError as e:
             logger.error(f"Impossibile inserire. Chiave duplicata rilevata: {e}")
+            self._rollback_user_slot(person)
             return None
 
         except WriteConcernError as e:
             logger.critical(f"Errore di scrittura: {e}")
+            self._rollback_user_slot(person)
             return None
 
         except ConnectionFailure as e:
             logger.critical(f"ERRORE DI CONNESSIONE: Il database non è raggiungibile: {e}")
+            self._rollback_user_slot(person)
             return None
 
         except Exception as e:
             logger.error(f"Errore sconosciuto durante l'inserimento: {e}")
+            self._rollback_user_slot(person)
             return None
+
+    @staticmethod
+    def _rollback_user_slot(person: Person):
+        if person.role == RoleType.USER:
+            logger.warning("Rollback: Resetto lo slot User a causa di un errore DB.")
+            Person.reset_user_slot()
         
     
     def remove_person(self, person_id: str) -> bool:
@@ -103,60 +136,93 @@ class Database():
             logger.warning(f"Nessuna persona trovata con ID {person_id}.")
             return False
     
-    def get_all_people(self): #TODO: Supportare la nuova person
+    def get_all_people(self) -> list[Person]:
         collection = self.get_collection()
         cursor = collection.find()
-        return [self.normalize_doc(doc) for doc in cursor]
+        people: list[Person] = []
+        for doc in cursor:
+            person = self._person_from_doc(doc)
+            if person is not None:
+                people.append(person)
+        return people
 
-    def get_person(self, person_id):
+    def get_person(self, person_id: str) -> Optional[Person]:
         collection = self.get_collection()
         oid = self.convert_to_objectid(person_id)
         if oid is None:
             logger.warning(f"ID non valido: {person_id}")
             return None
         doc = collection.find_one({"_id": oid})
-        return self.normalize_doc(doc)
+        return self._person_from_doc(doc)
     
-    def update_person(self, person_id: str, update_data: dict) -> bool:
+    def update_person(self, person_id: str, update_data: Person | dict) -> Optional[Person]:
         collection = self.get_collection()
 
         oid = self.convert_to_objectid(person_id)
         if oid is None:
             logger.warning(f"ID non valido per aggiornamento: {person_id}")
-            return False
+            return None
         
-        update_data.pop("_id", None)
-        update_data.pop("id", None)
+        if person_id != str(oid):
+            logger.warning(f"ID non coerente per aggiornamento: {person_id} vs {str(oid)}")
+            return None # Sanity check, WARNING: dovrebbe essere sempre coerente
+        
+        if isinstance(update_data, Person):
+            payload = self._person_to_document(update_data)
+        else:
+            payload = dict(update_data)
 
-        if not update_data:
-            return False
+        payload.pop("_id", None)
+        payload.pop("id", None)
 
-        # 3. Eseguo l'update con $set
-        result = collection.update_one(
-            {"_id": oid},            
-            {"$set": update_data}    
+        if not payload:
+            logger.warning("Nessun dato valido fornito per l'aggiornamento.")
+            return None
+
+        updated_doc = collection.find_one_and_update(
+            {"_id": oid},
+            {"$set": payload},
+            return_document=ReturnDocument.AFTER
         )
 
-        if result.matched_count > 0:
-            logger.info(f"Aggiornata persona {person_id}. Campi modificati: {result.modified_count}")
-            return True
-        else:
-            logger.warning(f"Nessuna persona trovata con ID {person_id} per l'aggiornamento.")
-            return False
+        if updated_doc:
+            person = self._person_from_doc(updated_doc)
+            if person:
+                logger.info(f"Aggiornata persona {person_id}.")
+            return person
+
+        logger.warning(f"Nessuna persona trovata con ID {person_id} per l'aggiornamento.")
+        return None
+    
+    def update_people(self, people: list) -> int:
+        success_count = 0
+        for person in people:
+            p = None
+            
+            if person.id is None:
+                p = self.add_person(person)                  
+            elif person.id is not None:
+                p = self.update_person(person.id, person)
+            else:
+                logger.error(f"Impossibile aggiornare persona con dati: {person}")
+            
+            if p is not None:
+                    success_count += 1
+
+        logger.info(f"Aggiornamento bulk completato per {success_count} di {len(people)} persone.")
+        return success_count
         
 
-    def get_all_encodings(self): #TODO: Supportare la nuova person
+    def get_all_encodings(self):
         people = self.get_all_people()
         
         known_encodings = []
         known_names = []
 
         for person in people:
-            name = person.get("name", "Unknown")
-            surname = person.get("surname", "Unknown")
-            full_name = f"{name} {surname}"
+            full_name = f"{person.name} {person.surname}"
             
-            face_encodings_dict = person.get("encoding", {})
+            face_encodings_dict = person.encoding or {}
             if not face_encodings_dict:
                 logger.warning(f"{full_name} risulta vuoto")
                 continue
@@ -178,3 +244,50 @@ class Database():
         logger.info(f"Database '{self.name_db}' eliminato con successo.")
         self.close_connection()
         logger.info(f"Connessione con {self.url} terminata.")
+
+
+"""
+come usare database.py 
+==============================
+
+Setup iniziale
+--------------
+>>> db = Database(url=\"mongodb://localhost:27017\", name=\"ddfr\", collection=\"people\") OPPURE PER BUILD USARE CONFIG.PY
+
+Creare e salvare una persona
+----------------------------
+>>> from datetime import date
+>>> nuova = Person(name=\"Mario\", surname=\"Rossi\", birthday=date(1990, 1, 1))
+>>> salvata = db.add_person(nuova)
+>>> print(salvata.id)
+
+Ottenere tutte le persone (list[Person])
+----------------------------------------
+>>> people = db.get_all_people()
+>>> for person in people:
+...     print(person.name, person.age)
+
+Leggere una singola persona
+---------------------------
+>>> found = db.get_person(salvata.id)
+>>> if found:
+...     print(found.relationship)
+
+Aggiornare i dati
+-----------------
+>>> updated = db.update_person(
+...     salvata.id,
+...     {\"relationship\": RelationshipType.FIGLIO}
+... )
+>>> if updated:
+...     print(updated.relationship)
+
+Rimuovere una persona
+---------------------
+>>> db.remove_person(salvata.id)
+
+Ottenere gli encoding facciali
+------------------------------
+>>> names, encodings = db.get_all_encodings()
+>>> print(len(encodings), \"encoding trovati\")
+"""

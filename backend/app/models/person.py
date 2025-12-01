@@ -7,6 +7,8 @@ from app.utils.constants import RelationshipType, RoleType
 
 logger = logging.getLogger(__name__)
 
+MAX_LEGHT = 50
+
 PyObjectId = Annotated[
     str | ObjectId,
     BeforeValidator(lambda x: ObjectId(x) if isinstance(x, str) else x),
@@ -16,8 +18,8 @@ PyObjectId = Annotated[
 class Person(BaseModel):
    
     id: Optional[PyObjectId] = Field(alias="_id", default=None)
-    name: str = Field(default="Unknown", min_length=2, max_length=50)
-    surname: str = Field(default="Unknown", min_length=2, max_length=50)
+    name: str = Field(default="Unknown", min_length=2, max_length=MAX_LEGHT)
+    surname: str = Field(default="Unknown", min_length=2, max_length=MAX_LEGHT)
     birthday: date
     relationship: RelationshipType = RelationshipType.ALTRO
     encoding: Optional[dict] = None 
@@ -37,11 +39,10 @@ class Person(BaseModel):
         if self.role == RoleType.USER:
             if Person._user_esistente:
                 
-                raise ValueError("Esiste già un paziente registrato (USER). Impossibile crearne un altro.")
-            
-            
+                raise ValueError(f"Esiste già un paziente registrato ({RoleType.USER}). Impossibile crearne un altro.")
+                       
             Person._user_esistente = True
-            logger.info(f"Nuovo Paziente (USER) registrato: {self.name} {self.surname}")
+            logger.info(f"Nuovo Paziente ({RoleType.USER}) registrato: {self.name} {self.surname}")
             
         return self
     
@@ -68,4 +69,4 @@ class Person(BaseModel):
     @classmethod
     def reset_user_slot(cls):
         cls._user_esistente = False
-        logger.warning("Slot Paziente (USER) resettato manualmente.")
+        logger.warning(f"Slot Paziente ({RoleType.USER}) resettato manualmente.")
