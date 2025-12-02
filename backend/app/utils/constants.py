@@ -24,3 +24,7 @@ class RelationshipType(str, Enum):
     ASSISTENTE_SOCIALE = "assistente sociale"
     SCUOLA = "scuola"
     CENTRO_DIURNO = "centro diurno"
+
+class RoleType(str, Enum):
+    USER = "user"
+    GUEST = "guest"

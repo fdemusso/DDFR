@@ -1,5 +1,9 @@
-from pydantic import BaseSettings
+from pydantic_settings import BaseSettings
 import os
+
+# Calcolo percorsi (questo era già corretto)
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+ENV_FILE_PATH = os.path.join(BASE_DIR, ".env")
 
 class DatabaseSettings(BaseSettings):
     url: str = "mongodb://localhost:27017/"
@@ -9,14 +13,19 @@ class DatabaseSettings(BaseSettings):
     
     class Config:
         env_prefix = "DB_"
-        env_file = ".env"
+        env_file = ENV_FILE_PATH
+        env_file_encoding = 'utf-8'
+        extra = "ignore"  # <--- AGGIUNGI QUESTO QUI
 
-class LoggingSettings(BaseSettings):
-    logfolder: str = os.path.join(os.path.dirname(os.path.abspath(__file__)), "logs")
-
+class PathSettings(BaseSettings):
+    logfolder: str = os.path.join(BASE_DIR, "logs") 
+    imgsfolder: str = os.path.join(BASE_DIR, "img")
+    
     class Config:
         env_prefix = "LOG_"
-        env_file = ".env"
+        env_file = ENV_FILE_PATH
+        env_file_encoding = 'utf-8'
+        extra = "ignore"  # <--- AGGIUNGI QUESTO QUI
 
 class APISettings(BaseSettings):
     app_name: str = "DDFR API"
@@ -25,9 +34,11 @@ class APISettings(BaseSettings):
     debug: bool = False
 
     class Config:
-        env_file = ".env"
+        env_file = ENV_FILE_PATH
+        env_file_encoding = 'utf-8'
+        extra = "ignore"  # <--- AGGIUNGI QUESTO QUI
 
-# Istanze globali da importare
+# Istanze globali
 database_settings = DatabaseSettings()
-logging_settings = LoggingSettings()
+path_settings = PathSettings()
 api_settings = APISettings()
