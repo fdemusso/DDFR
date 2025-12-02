@@ -43,6 +43,7 @@ class FaceSystem():
             return False
         return False
     
+    
     def load_database(self):
         
         try:
@@ -118,3 +119,7 @@ class FaceSystem():
         return True
 
 
+def frame_recognition(rgb_small_frame):
+    face_locations = face_recognition.face_locations(rgb_small_frame)
+    face_encodings = face_recognition.face_encodings(rgb_small_frame, face_locations)
+    return face_locations, face_encodings
