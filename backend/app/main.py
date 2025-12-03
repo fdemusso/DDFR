@@ -1,29 +1,40 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from app.routers import websocket
-from app.routers import route
-from app.config import database_settings as set, path_settings, api_settings
-from app.services import database
 
 import logging
 import os
 from datetime import datetime
 from contextlib import asynccontextmanager
 
-# Configurazione del logging
-os.makedirs(path_settings.logfolder, exist_ok=True)
-log_filename = os.path.join(path_settings.logfolder, f"app-{datetime.now().strftime('%Y%m%d-%H%M%S')}.log")
+from app.config import database_settings as set, path_settings, api_settings
+from app.services import database
 
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s - %(levelname)s - %(message)s",
-    handlers=[
-        logging.FileHandler(log_filename),
-        logging.StreamHandler()
-    ]
-)
+# Configurazione del logging
+# IMPORTANTE: il logging va configurato PRIMA di importare router o altri moduli
+# che usano `logging.getLogger(__name__)` e scrivono log a livello modulo.
+os.makedirs(path_settings.logfolder, exist_ok=True)
+
+# Un solo file di log "fisso" per tutto il backend FastAPI
+log_filename = os.path.join(path_settings.logfolder, "app.log")
+
+# Evita di aggiungere più volte gli stessi handler (utile con reload/uvicorn)
+root_logger = logging.getLogger()
+if not root_logger.handlers:
+    logging.basicConfig(
+        level=logging.INFO,
+        format="%(asctime)s - %(levelname)s - %(name)s - %(message)s",
+        handlers=[
+            logging.FileHandler(log_filename),
+            logging.StreamHandler()
+        ]
+    )
 
 logger = logging.getLogger(__name__)
+
+# Solo dopo aver configurato il logging importiamo i router,
+# così anche i log eseguiti in fase di import vengono registrati.
+from app.routers import websocket  # noqa: E402
+from app.routers import route      # noqa: E402
 
 
 # Lifespan: gestisce startup e shutdown dell’app in un solo contesto

@@ -29,10 +29,10 @@ logger = logging.getLogger(__name__)
 def _build_demo_person() -> Person:
     """Crea l'istanza demo da inserire nel DB."""
     return Person(
-        name="Flavio",
-        surname="De Musso",
-        birthday=datetime(2005, 6, 17),
-        role=RoleType.USER,
+        name="Antonello",
+        surname="Giannuzzi",
+        birthday=datetime(2005, 9, 24),
+        role=RoleType.GUEST,
     )
 
 
@@ -75,7 +75,7 @@ def main() -> None:
 
     demo_person = _build_demo_person()
 
-    paths = ["/Users/flaviodemusso/Desktop/DDFR/backend/public/Img/io.png"]
+    paths = ["/Users/flaviodemusso/Desktop/DDFR/backend/public/Img/IMG_5786.png"]
 
     encodings = _encode_faces(paths)
     if not encodings:

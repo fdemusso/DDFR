@@ -1,0 +1,151 @@
+/* Reset di base per garantire il full screen */
+* {
+    box-sizing: border-box;
+  }
+  
+  html, body, #root, .App {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100dvh; /* 100dvh si adatta alle barre dinamiche di iOS/Android */
+    overflow: hidden; /* Impedisce lo scroll accidentale */
+    background-color: #000;
+  }
+  
+  /* Contenitore principale */
+  .video-container {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  
+  /* La Webcam deve coprire tutto lo schermo (come una storia Instagram) */
+  .webcam-video {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover; /* FONDAMENTALE: Taglia i bordi ma riempie lo schermo */
+    z-index: 1;
+  }
+  
+  /* Overlay di Debug */
+  .status-overlay {
+    position: absolute;
+    top: env(safe-area-inset-top, 20px); /* Rispetta la notch/island */
+    left: 20px;
+    z-index: 50;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(4px);
+    padding: 10px 15px;
+    border-radius: 12px;
+    color: #00ff88;
+    font-family: monospace;
+    font-size: 12px;
+    pointer-events: none; /* Lascia cliccare attraverso */
+    border: 1px solid rgba(0, 255, 136, 0.3);
+  }
+  
+  /* Tasto Camera Switch - Effetto Liquid Glass CSS Premium */
+  .camera-toggle-wrapper {
+    position: absolute;
+    bottom: calc(40px + env(safe-area-inset-bottom)); /* Solleva sopra la barra home */
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 50;
+  }
+  
+  .glass-button {
+    background: rgba(255, 255, 255, 0.15); /* Sfondo semitrasparente */
+    backdrop-filter: blur(15px); /* Effetto vetro sfocato */
+    -webkit-backdrop-filter: blur(15px); /* Supporto Safari */
+    border: 1px solid rgba(255, 255, 255, 0.3); /* Bordo sottile e luminoso */
+    box-shadow: 
+      0 8px 32px 0 rgba(0, 0, 0, 0.3), /* Ombra profonda */
+      inset 0 0 10px rgba(255, 255, 255, 0.1); /* Luce interna */
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+  }
+  
+  .glass-button:active {
+    transform: scale(0.9); /* Effetto pressione */
+    background: rgba(255, 255, 255, 0.25);
+  }
+  
+  .glass-button span {
+    font-size: 28px;
+    text-shadow: 0 2px 5px rgba(0,0,0,0.2);
+  }
+  
+  /* Stile Riquadro Volto (Face Box) - Stile HUD */
+  .face-box {
+    position: absolute;
+    z-index: 10;
+    border: 2px solid rgba(0, 255, 136, 0.8);
+    box-shadow: 0 0 15px rgba(0, 255, 136, 0.4); /* Glow esterno */
+    background: rgba(0, 255, 136, 0.05); /* Leggerissimo verde interno */
+    transition: all 0.1s linear; /* Movimento fluido */
+    border-radius: 8px;
+  }
+
+  /* Variante per SCONOSCIUTO (rosso) */
+  .face-box.unknown {
+    border-color: rgba(255, 68, 68, 0.9);
+    box-shadow: 0 0 18px rgba(255, 68, 68, 0.6);
+    background: rgba(255, 68, 68, 0.08);
+  }
+  
+  /* Angoli decorativi per effetto "Tech" */
+  .face-box::before, .face-box::after {
+    content: '';
+    position: absolute;
+    width: 10px;
+    height: 10px;
+    border: 2px solid #fff;
+    transition: all 0.2s;
+  }
+  
+  .face-box::before {
+    top: -2px; left: -2px;
+    border-right: 0; border-bottom: 0;
+    border-top-left-radius: 8px;
+  }
+  .face-box::after {
+    bottom: -2px; right: -2px;
+    border-left: 0; border-top: 0;
+    border-bottom-right-radius: 8px;
+  }
+  
+  /* Label nome */
+  .face-label {
+    position: absolute;
+    bottom: 100%;
+    left: 0;
+    background: rgba(0, 255, 136, 0.9);
+    color: #000;
+    padding: 2px 8px;
+    font-size: 12px;
+    font-weight: 800;
+    text-transform: uppercase;
+    border-radius: 4px 4px 4px 0;
+    margin-bottom: 4px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.5);
+    white-space: nowrap;
+  }
+
+  /* Label per sconosciuto (rosso) */
+  .face-box.unknown .face-label {
+    background: rgba(255, 68, 68, 0.95);
+    color: #fff;
+  }

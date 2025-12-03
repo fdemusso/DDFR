@@ -4,6 +4,7 @@ import numpy as np
 import logging
 import base64
 import json
+import time
 
 from app.config import database_settings as set
 from app.services import database
@@ -22,6 +23,8 @@ DATASET = database.Database(
     collection=set.collection,
 )
 faces = fr.FaceSystem(DATASET)
+last_faces_reload = time.time()
+FACES_RELOAD_INTERVAL = 10
 logger.info(f"Caricati {len(faces.known_face_names)} volti noti dal database.")
 
 @router.websocket("/ws")  # Nota: non è più @app, ma @router
@@ -63,6 +66,14 @@ async def websocket_endpoint(websocket: WebSocket):
             
             if process_this_frame:
                 face_names = []
+                now = time.time()
+                global faces, last_faces_reload
+                if now - last_faces_reload > FACES_RELOAD_INTERVAL:
+                    # Ricarico i volti dal DB ma solo ogni FACES_RELOAD_INTERVAL secondi
+                    faces = fr.FaceSystem(DATASET)
+                    last_faces_reload = now
+                    logger.info(f"Dataset volti aggiornato, tot: {len(faces.known_face_names)}")
+
                 for face_encoding in face_encodings:
                     # Confronto con i volti noti
                     matches = fr.face_recognition.compare_faces(faces.known_face_encodings, face_encoding, tolerance=0.6)
@@ -79,7 +90,8 @@ async def websocket_endpoint(websocket: WebSocket):
             process_this_frame = not process_this_frame 
 
             faces_data = []
-            for (top, right, bottom, left) in face_locations:
+            # Dovrei inviare più di un volto
+            for (top, right, bottom, left), name in zip(face_locations, face_names):
                 # 5. Ri-scaliamo le coordinate x4
                 faces_data.append({
                     "id": f"{top}_{left}", 

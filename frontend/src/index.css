@@ -1,13 +1,170 @@
-body {
+html, body, #root {
   margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden; /* Niente scroll */
+}
+
+body {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
     'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  background-color: #020409; /* sfondo scuro neutro per i bordi fuori camera */
 }
 
 code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
+}
+
+.App {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100vw;
+  height: 100vh; /* fallback */
+  height: 100dvh; /* usa altezza reale viewport su mobile */
+  background-color: #000;
+  overflow: hidden;
+}
+
+.video-container {
+  position: relative;
+  width: 100vw;
+  height: 100vh; /* fallback */
+  height: 100dvh;
+  box-sizing: border-box;
+}
+
+/* Bande sfocate sopra/sotto per simulare full screen sotto le barre di Safari */
+.safe-blur-top,
+.safe-blur-bottom {
+  position: absolute;
+  left: 0;
+  right: 0;
+  z-index: 5;
+  pointer-events: none;
+  backdrop-filter: blur(18px);
+}
+
+.safe-blur-top {
+  top: 0;
+  height: max(32px, env(safe-area-inset-top, 0px) + 16px);
+  background: linear-gradient(
+    to bottom,
+    rgba(2, 4, 9, 0.95),
+    rgba(2, 4, 9, 0.55),
+    transparent
+  );
+}
+
+.safe-blur-bottom {
+  bottom: 0;
+  height: max(40px, env(safe-area-inset-bottom, 0px) + 24px);
+  background: linear-gradient(
+    to top,
+    rgba(2, 4, 9, 0.98),
+    rgba(2, 4, 9, 0.6),
+    transparent
+  );
+}
+
+.webcam {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Forza il video interno di react-webcam a NON essere specchiato/ruotato */
+.webcam video {
+  transform: none !important;
+}
+
+.status-overlay {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  z-index: 10;
+  background-color: rgba(0, 0, 0, 0.6);
+  color: #00ff00;
+  padding: 6px 10px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-family: monospace;
+}
+
+/* Wrapper del bottone: fisso in basso al centro */
+.camera-toggle-wrapper {
+  position: absolute;
+  bottom: calc(24px + env(safe-area-inset-bottom, 0px));
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 25;
+  width: 96px;
+  height: 96px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Wrapper LiquidGlass del pulsante (vero “vetro”) */
+.liquid-glass-button {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 20% 10%, rgba(255, 255, 255, 0.85), transparent 55%),
+    radial-gradient(circle at 80% 95%, rgba(180, 210, 255, 0.45), transparent 70%),
+    rgba(255, 255, 255, 0.14);
+  border: 1px solid rgba(255, 255, 255, 0.55);
+  box-shadow:
+    0 18px 40px rgba(0, 0, 0, 0.85),
+    0 0 16px rgba(180, 210, 255, 0.55),
+    inset 0 0 0 0.5px rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(22px) saturate(160%);
+}
+
+.camera-toggle-button {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  border: none;
+  background: transparent;
+  color: #ffffff;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.12s ease-out, filter 0.12s ease-out;
+}
+
+.camera-toggle-button .material-symbols-outlined {
+  font-size: 34px;
+  text-shadow:
+    0 0 8px rgba(0, 0, 0, 0.65);
+}
+
+.camera-toggle-button:hover {
+  transform: scale(1.03);
+  filter: brightness(1.05);
+}
+
+.camera-toggle-button:active {
+  transform: scale(0.97);
+}
+
+/* Opzionale: mostrare il bottone soprattutto su schermi piccoli (mobile) */
+@media (min-width: 769px) {
+  .camera-toggle-button {
+    font-size: 12px;
+    padding: 8px 12px;
+  }
 }
