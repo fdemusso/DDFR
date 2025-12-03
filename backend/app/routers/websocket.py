@@ -25,7 +25,7 @@ DATASET = database.Database(
 faces = fr.FaceSystem(DATASET)
 last_faces_reload = time.time()
 FACES_RELOAD_INTERVAL = 10
-logger.info(f"Caricati {len(faces.known_face_names)} volti noti dal database.")
+logger.info(f"Caricati {len(faces.know_face_id)} volti noti dal database.")
 
 @router.websocket("/ws")  # Nota: non è più @app, ma @router
 async def websocket_endpoint(websocket: WebSocket):
@@ -65,42 +65,86 @@ async def websocket_endpoint(websocket: WebSocket):
             face_locations , face_encodings = fr.frame_recognition(rgb_small_frame)
             
             if process_this_frame:
-                face_names = []
+                face_id = []
                 now = time.time()
                 global faces, last_faces_reload
                 if now - last_faces_reload > FACES_RELOAD_INTERVAL:
                     # Ricarico i volti dal DB ma solo ogni FACES_RELOAD_INTERVAL secondi
                     faces = fr.FaceSystem(DATASET)
                     last_faces_reload = now
-                    logger.info(f"Dataset volti aggiornato, tot: {len(faces.known_face_names)}")
+                    logger.info(f"Dataset volti aggiornato, tot: {len(faces.know_face_id)}")
 
                 for face_encoding in face_encodings:
                     # Confronto con i volti noti
                     matches = fr.face_recognition.compare_faces(faces.known_face_encodings, face_encoding, tolerance=0.6)
-                    name = "Sconosciuto"
+                    id = None
 
                     # Uso il volto più simile
                     face_distances = fr.face_recognition.face_distance(faces.known_face_encodings, face_encoding)
                     best_match_index = np.argmin(face_distances)
                     if matches[best_match_index]:
-                        name = faces.known_face_names[best_match_index]
+                        id = faces.know_face_id[best_match_index]
 
-                    face_names.append(name)
+                    face_id.append(id)
 
             process_this_frame = not process_this_frame 
 
+            face_names = []
+            for id in face_id:
+                for people in faces.know_people:
+                    if people.id == id:
+                        name = people.name
+                        face_names.append(name)
+                        continue
+                if id is None:
+                    face_names.append("Unknown")
+                        
+                    
             faces_data = []
-            # Dovrei inviare più di un volto
-            for (top, right, bottom, left), name in zip(face_locations, face_names):
-                # 5. Ri-scaliamo le coordinate x4
-                faces_data.append({
-                    "id": f"{top}_{left}", 
-                    "name": name, 
-                    "top": top * 4,
-                    "right": right * 4,
-                    "bottom": bottom * 4,
-                    "left": left * 4
-                })
+            # Costruiamo un oggetto completo per ogni volto rilevato
+            # (top, right, bottom, left) sono le coordinate restituite da face_recognition
+            for (top, right, bottom, left), name, id in zip(face_locations, face_names, face_id):
+                person_data = None
+
+                if id is not None:
+                    for people in faces.know_people:
+                        if people.id == id:
+                            person_data = people
+                            break
+
+                if person_data is not None:
+                    # Persona riconosciuta
+                    relationship = getattr(person_data.relationship, "value", person_data.relationship)
+                    role = getattr(person_data.role, "value", person_data.role)
+
+                    face_dict = {
+                        "id": f"{top}_{left}",
+                        "name": person_data.name,
+                        "surname": person_data.surname,
+                        "age": person_data.age,
+                        "relationship": relationship,
+                        "role": role,
+                        "top": top * 4,
+                        "right": right * 4,
+                        "bottom": bottom * 4,
+                        "left": left * 4,
+                    }
+                else:
+                    # Volto sconosciuto
+                    face_dict = {
+                        "id": f"{top}_{left}",
+                        "name": "Unknown",
+                        "surname": "Unknown",
+                        "age": 0,
+                        "relationship": "Unknown",
+                        "role": "unknown",
+                        "top": top * 4,
+                        "right": right * 4,
+                        "bottom": bottom * 4,
+                        "left": left * 4,
+                    }
+
+                faces_data.append(face_dict)
 
             # 6. Risposta
             await websocket.send_text(json.dumps({"status": "ok", "faces": faces_data}))

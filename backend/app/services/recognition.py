@@ -10,8 +10,9 @@ class FaceSystem():
 
 
     def __init__(self, db_instance: Database):
-        self.known_face_names=[]
+        self.know_face_id=[]
         self.known_face_encodings=[]
+        self.know_people = []
         self.client : Database = db_instance
         self.load_database()
 
@@ -26,17 +27,17 @@ class FaceSystem():
             logger.error("Check integrità fallito: Database non connesso o istanza mancante.")
             return False
         
-        if len(self.known_face_encodings) == len(self.known_face_names):
+        if len(self.known_face_encodings) == len(self.know_face_id):
             return True
         
-        logger.critical(f"ERRORE INTEGRITÀ: {len(self.known_face_names)} nomi ma {len(self.known_face_encodings)} encodings!")
+        logger.critical(f"ERRORE INTEGRITÀ: {len(self.know_face_id)} nomi ma {len(self.known_face_encodings)} encodings!")
         return False
     
     @property
     def is_operational(self): 
         if self.dataset_integrity:
 
-            if len(self.known_face_names) > 0:
+            if len(self.know_face_id) > 0:
                 return True
             
             logger.warning(f"Sistema integro ma VUOTO. Nessun volto caricato dal DB {self.client.name_db}.")
@@ -47,7 +48,8 @@ class FaceSystem():
     def load_database(self):
         
         try:
-            self.known_face_names, self.known_face_encodings = self.client.get_all_encodings()
+            self.know_face_id, self.known_face_encodings = self.client.get_all_encodings()
+            self.know_people = self.client.get_all_people()
 
             if self.is_operational:
                 logger.info(f"FaceSystem avviato correttamente")

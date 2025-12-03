@@ -320,25 +320,25 @@ class Database():
         people = self.get_all_people()
         
         known_encodings = []
-        known_names = []
+        known_ids = []
 
         for person in people:
-            full_name = f"{person.name} {person.surname}"
+            id = person.id
             
             face_encodings_dict = person.encoding or {}
             if not face_encodings_dict:
-                logger.warning(f"{full_name} risulta vuoto")
+                logger.warning(f"{id} risulta vuoto")
                 continue
 
             for hash_key, encoding_list in face_encodings_dict.items():
                 try: 
                     known_encodings.append(np.array(encoding_list))
-                    known_names.append(full_name)
+                    known_ids.append(id)
                 except Exception as e:
-                    logger.error(f"Saltato encoding corrotto per {full_name} (Hash: {hash_key}). Causa: {e}")
+                    logger.error(f"Saltato encoding corrotto per {str(id)} (Hash: {hash_key}). Causa: {e}")
                     continue
 
-        return known_names, known_encodings
+        return known_ids, known_encodings
     
     def drop_database(self):
 

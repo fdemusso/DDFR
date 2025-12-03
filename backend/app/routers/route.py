@@ -23,7 +23,7 @@ Faces = FaceSystem(db)
 logger.info("Servizi di database e riconoscimento inizializzati.")
 logger.debug(f"Database connesso: {db.is_connected}")
 logger.debug(f"Sistema di riconoscimento operativo: {Faces.is_operational}")
-logger.info(f"Numero di volti noti caricati: {len(Faces.known_face_names)}")
+logger.info(f"Numero di volti noti caricati: {len(Faces.know_face_id)}")
 
 
 # ESEMPIO DI UTILIZZO DEI SERVIZI

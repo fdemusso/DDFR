@@ -92,7 +92,7 @@
   .face-box {
     position: absolute;
     z-index: 10;
-    border: 2px solid rgba(0, 255, 136, 0.8);
+    border: 2px solid rgba(0, 255, 136, 0.8); /* default: guest/known */
     box-shadow: 0 0 15px rgba(0, 255, 136, 0.4); /* Glow esterno */
     background: rgba(0, 255, 136, 0.05); /* Leggerissimo verde interno */
     transition: all 0.1s linear; /* Movimento fluido */
@@ -104,6 +104,20 @@
     border-color: rgba(255, 68, 68, 0.9);
     box-shadow: 0 0 18px rgba(255, 68, 68, 0.6);
     background: rgba(255, 68, 68, 0.08);
+  }
+
+  /* Variante per ruolo USER (azzurro) */
+  .face-box.role-user {
+    border-color: rgba(80, 180, 255, 0.95);
+    box-shadow: 0 0 18px rgba(80, 180, 255, 0.7);
+    background: rgba(80, 180, 255, 0.08);
+  }
+
+  /* Variante esplicita per ruolo GUEST (verde) se serve override futuro */
+  .face-box.role-guest {
+    border-color: rgba(0, 255, 136, 0.9);
+    box-shadow: 0 0 18px rgba(0, 255, 136, 0.6);
+    background: rgba(0, 255, 136, 0.08);
   }
   
   /* Angoli decorativi per effetto "Tech" */
@@ -132,7 +146,7 @@
     position: absolute;
     bottom: 100%;
     left: 0;
-    background: rgba(0, 255, 136, 0.9);
+    background: rgba(0, 255, 136, 0.9); /* default guest/known: verde */
     color: #000;
     padding: 2px 8px;
     font-size: 12px;
@@ -144,8 +158,58 @@
     white-space: nowrap;
   }
 
+  .face-age {
+    font-size: 11px;
+    font-weight: 600;
+    margin-left: 2px;
+  }
+
   /* Label per sconosciuto (rosso) */
   .face-box.unknown .face-label {
     background: rgba(255, 68, 68, 0.95);
     color: #fff;
+  }
+
+  /* Label nome coerente per ruolo USER (azzurro) */
+  .face-box.role-user .face-label {
+    background: rgba(80, 180, 255, 0.95);
+    color: #000;
+  }
+
+  /* Label nome coerente per ruolo GUEST (verde) - usa il default, ma la lasciamo per chiarezza */
+  .face-box.role-guest .face-label {
+    background: rgba(0, 255, 136, 0.9);
+    color: #000;
+  }
+
+  /* Etichetta relationship come “apice” in basso */
+  .face-relationship {
+    position: absolute;
+    right: -4px;
+    bottom: -4px;
+    transform: translate(0, 100%);
+    background: rgba(0, 0, 0, 0.8);
+    color: #fff; /* default: testo bianco su sfondo scuro neutro */
+    padding: 2px 6px;
+    font-size: 11px;
+    font-weight: 600;
+    border-radius: 6px 0 0 0;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.6);
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+
+  .face-box.role-user .face-relationship {
+    display: none; /* sicurezza in più, anche se già gestito da React */
+  }
+
+  /* Relationship coerente con GUEST (verde) */
+  .face-box.role-guest .face-relationship {
+    background: rgba(0, 255, 136, 0.95);
+    color: #000;
+  }
+
+  /* Per sicurezza, nessuna relationship visualizzata per unknown */
+  .face-box.unknown .face-relationship {
+    display: none;
   }

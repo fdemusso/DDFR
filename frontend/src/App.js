@@ -82,7 +82,30 @@ function App() {
 
       socket.onmessage = (event) => {
         const data = JSON.parse(event.data);
-        setFaces(data.faces);
+
+        // Ora il backend invia già un oggetto completo per ogni volto:
+        // { id, name, surname, age, relationship, role, top, right, bottom, left }
+        const rawFaces = Array.isArray(data.faces) ? data.faces : [];
+
+        const parsedFaces = rawFaces.map((f) => {
+          const name = (f.name || "").toString().trim();
+          const surname = (f.surname || "").toString().trim();
+          const fullNameRaw = [name, surname].filter(Boolean).join(" ").trim();
+
+          let age = f.age;
+          if (typeof age === "string") {
+            const n = parseInt(age, 10);
+            age = Number.isNaN(n) ? 0 : n;
+          }
+
+          return {
+            ...f,
+            fullName: fullNameRaw || "UNKNOWN",
+            age,
+          };
+        });
+
+        setFaces(parsedFaces);
       };
     } catch (e) {
       setConnectionStatus("error");
@@ -170,15 +193,15 @@ function App() {
         {/* Layer 1: Webcam */}
         {/* Nota l'attributo className="webcam-video" che si collega al CSS */}
         <Webcam
-          audio={false}
-          ref={webcamRef}
-          screenshotFormat="image/jpeg"
-          videoConstraints={videoConstraints}
-          mirrored={false} 
-          className="webcam-video" 
-          onUserMedia={() => setIsCameraReady(true)}
-          key={isFrontCamera ? "front" : "back"}
-        />
+            audio={false}
+            ref={webcamRef}
+            screenshotFormat="image/jpeg"
+            videoConstraints={videoConstraints}
+            mirrored={false} 
+            className="webcam-video" 
+            onUserMedia={() => setIsCameraReady(true)}
+            key={isFrontCamera ? "front" : "back"}
+          />
 
         {/* Layer 2: Bottone Glassmorphism Custom */}
         <div className="camera-toggle-wrapper">
@@ -201,13 +224,25 @@ function App() {
           // a seconda di come il browser centra il video. 
           // Per una precisione millimetrica servirebbe calcolare l'aspect ratio, ma per ora usiamo % o px diretti.
           
-          const nameNormalized = (face.name || "").toString().trim().toLowerCase();
+          const displayName = (face.fullName || face.name || "").toString().trim();
+          const nameNormalized = displayName.toLowerCase();
           const isUnknown = !nameNormalized || nameNormalized.includes("sconosciuto") || nameNormalized === "unknown";
+
+          const roleNormalized = (face.role || "").toString().trim().toLowerCase();
+
+          let roleClass = "";
+          if (isUnknown) {
+            roleClass = "role-unknown";
+          } else if (roleNormalized === "user") {
+            roleClass = "role-user";
+          } else if (roleNormalized === "guest") {
+            roleClass = "role-guest";
+          }
 
           return (
             <div
               key={index}
-              className={`face-box ${isUnknown ? 'unknown' : ''}`}
+              className={`face-box ${isUnknown ? 'unknown' : ''} ${roleClass}`}
               style={{
                 top: face.top,
                 left: face.left,
@@ -216,8 +251,18 @@ function App() {
               }}
             >
               <div className="face-label">
-                {face.name || "UNKNOWN"}
+                {displayName || "UNKNOWN"}
+                {typeof face.age === "number" && face.age > 0 && (
+                  <span className="face-age">, {face.age}</span>
+                )}
               </div>
+              
+              {/* Relationship come etichetta tipo apice in basso, tranne per ruolo user */}
+              {!isUnknown && roleNormalized !== "user" && face.relationship && (
+                <div className="face-relationship">
+                  {face.relationship}
+                </div>
+              )}
             </div>
           );
         })}
