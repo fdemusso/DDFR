@@ -26,15 +26,6 @@ logger.debug(f"Sistema di riconoscimento operativo: {Faces.is_operational}")
 logger.info(f"Numero di volti noti caricati: {len(Faces.know_face_id)}")
 
 
-# ESEMPIO DI UTILIZZO DEI SERVIZI
-# people = db.get_all_people()
-# logger.info(f"Numero di persone nel database: {len(people)}")
-# se si lavora localmente si può aggiornare people nel database cosi:
-#db.update_people(people) così si aggiornano i record con i nuovi encoding di tutte le persone
-# bisogna mantenere la coerenza tra databse e dati locali
-# quindi people = db.get_all_people() --> aggiornare i dati locali --> db.update_people(people)
-
-
 
 
 

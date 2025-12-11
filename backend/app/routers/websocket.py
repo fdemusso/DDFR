@@ -11,31 +11,21 @@ from services import database
 import services.recognition as fr
 
 
+# Configurazione iniziale
 logger = logging.getLogger(__name__)
-
-# Creiamo il Router
 router = APIRouter()
+
 TOLLERANCE = api_settings.tollerance
-# --- CARICAMENTO MODELLI / DATABASE ---
-try:
-    DATASET = database.Database(
+DATASET = database.Database(
         url=set.url,
         name=set.name,
         collection=set.collection,
     )
-    faces = fr.FaceSystem(DATASET)
-    last_faces_reload = time.time()
-    FACES_RELOAD_INTERVAL = 10
-    logger.info(f"Caricati {len(faces.know_face_id)} volti noti dal database.")
-except Exception as e:
-    logger.critical(f"Errore durante l'inizializzazione del database/riconoscimento: {e}", exc_info=True)
-    # Inizializziamo variabili di fallback per permettere l'avvio del server
-    DATASET = None
-    faces = None
-    last_faces_reload = time.time()
-    FACES_RELOAD_INTERVAL = 10
+    
+people = DATASET.get_all_people()
+engine = fr.FaceEngine(people)
 
-@router.websocket("/ws")  # Nota: non è più @app, ma @router
+@router.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):
     try:
         await websocket.accept()
@@ -45,17 +35,13 @@ async def websocket_endpoint(websocket: WebSocket):
         raise
 
     try:
-        # Initialize some variables
-        face_locations = []
-        face_encodings = []
-        face_names = []
-        process_this_frame = True
 
+        start_time = time.time()
         while True:
-            # 1. Ricezione dati
+            #Ricezione dati
             data = await websocket.receive_text()
 
-            # 2. Parsing Immagine (Base64 -> OpenCV)
+            #Parsing Immagine (Base64 -> OpenCV)
             try:
                 if ',' in data:
                     header, encoded = data.split(",", 1)
@@ -73,13 +59,11 @@ async def websocket_endpoint(websocket: WebSocket):
                 logger.error(f"Errore durante il parsing dell'immagine: {e}")
                 continue
 
-            # 3. Ottimizzazione (Resize 1/4)
-            small_frame = cv2.resize(frame, (0, 0), fx=0.25, fy=0.25)
-            # Conversione BGR -> RGB
-            rgb_small_frame = np.ascontiguousarray(small_frame[:, :, ::-1])
-
-            # 4. Rilevamento Facce
-            face_locations , face_encodings = fr.frame_recognition(rgb_small_frame)
+            #Riconoscimento dei volti
+            t0 = time.time()
+            faces = engine.analyze_frame(frame)
+            t1 = time.time()
+            inference_time = (t1 - t0) * 1000 # a fine statistici
             
             if process_this_frame:
                 face_id = []

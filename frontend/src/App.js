@@ -34,12 +34,14 @@ function App() {
     };
   }, []);
 
-  // --- LOGICA WEBSOCKET (Invariata) ---
+  // --- LOGICA WEBSOCKET ---
   const getWebSocketUrl = () => {
     const protocol = window.location.protocol === 'https:' ? 'wss' : 'ws';
     const host = window.location.hostname;
     const port = 8000; 
-    return `${protocol}://${host}:${port}/ws`;
+    const wsUrl = `${protocol}://${host}:${port}/ws`;
+    console.log("Costruito URL WebSocket:", wsUrl, "da hostname:", host, "protocol:", protocol);
+    return wsUrl;
   };
 
   const scheduleReconnect = () => {
@@ -60,22 +62,37 @@ function App() {
 
   const initWebSocket = () => {
     try {
-      const socket = new WebSocket(getWebSocketUrl());
+      const wsUrl = getWebSocketUrl();
+      console.log("Tentativo di connessione WebSocket a:", wsUrl);
+      const socket = new WebSocket(wsUrl);
       ws.current = socket;
 
       socket.onopen = () => {
-        console.log("WS Connesso");
+        console.log("WS Connesso con successo a:", wsUrl);
         setConnectionStatus("connected");
         setReconnectAttempts(0);
         if (reconnectTimerRef.current) clearTimeout(reconnectTimerRef.current);
       };
 
-      socket.onclose = () => {
+      socket.onclose = (event) => {
+        console.log("WS Disconnesso. Code:", event.code, "Reason:", event.reason, "WasClean:", event.wasClean);
         setConnectionStatus("disconnected");
         scheduleReconnect();
       };
 
       socket.onerror = (err) => {
+        console.error("Errore WebSocket:", err);
+        console.error("URL tentato:", wsUrl);
+        console.error("Dettagli errore:", {
+          type: err.type,
+          target: err.target,
+          currentTarget: err.currentTarget,
+          timeStamp: err.timeStamp
+        });
+        // Mostra anche l'errore nella console del browser
+        if (err.target && err.target.readyState !== WebSocket.OPEN) {
+          console.error("Stato WebSocket:", err.target.readyState, "(0=CONNECTING, 1=OPEN, 2=CLOSING, 3=CLOSED)");
+        }
         setConnectionStatus("error");
         scheduleReconnect();
       };

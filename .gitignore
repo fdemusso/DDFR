@@ -5,7 +5,10 @@ logs/
 database/
 mongod.out
 
+# certificati
 
+cert.pem
+key.pem
 
 # Ignore image files
 *.png

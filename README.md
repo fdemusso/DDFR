@@ -75,3 +75,15 @@ To start the local database server:
 
 ```bash
 nohup /Users/flaviodemusso/mongodb-macos-aarch64--8.2.2/bin/mongod --dbpath /Users/flaviodemusso/Desktop/DDFR/database --logpath /Users/flaviodemusso/Desktop/DDFR/database/mongodb.log > mongod.out 2>&1 &
+
+
+backend
+
+```bash
+cd /Users/flaviodemusso/Desktop/DDFR/backend
+
+uvicorn app.main:app \
+  --host 0.0.0.0 \
+  --port 8000 \
+  --ssl-certfile=/Users/flaviodemusso/172.29.4.161.pem \
+  --ssl-keyfile=/Users/flaviodemusso/172.29.4.161-key.pem
