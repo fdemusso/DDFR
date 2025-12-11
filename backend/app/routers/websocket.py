@@ -64,25 +64,18 @@ async def websocket_endpoint(websocket: WebSocket):
             faces = engine.analyze_frame(frame)
             t1 = time.time()
             inference_time = (t1 - t0) * 1000 # a fine statistici
+
+            
             
             if process_this_frame:
                 face_id = []
                 now = time.time()
-                global faces, last_faces_reload
                 
                 # Verifica che il sistema di riconoscimento sia inizializzato
-                if faces is None or DATASET is None:
+                if faces.UserMap is None or DATASET is None:
                     logger.warning("Sistema di riconoscimento non inizializzato, saltando il riconoscimento")
-                    face_id = [None] * len(face_encodings)
+                    #TODO: verificare sia corretto
                 else:
-                    if now - last_faces_reload > FACES_RELOAD_INTERVAL:
-                        try:
-                            # Ricarico i volti dal DB ma solo ogni FACES_RELOAD_INTERVAL secondi
-                            faces = fr.FaceSystem(DATASET)
-                            last_faces_reload = now
-                            logger.info(f"Dataset volti aggiornato, tot: {len(faces.know_face_id)}")
-                        except Exception as e:
-                            logger.error(f"Errore durante il ricaricamento dei volti: {e}")
 
                     for face_encoding in face_encodings:
                         try:

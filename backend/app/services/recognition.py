@@ -8,7 +8,7 @@ from insightface.app import FaceAnalysis
 import onnxruntime as ort
 
 import utils.img as img
-import models.person as p
+from models.person import Person
 
 MODEL = "buffalo_l"
 DETECTION_SIZE = 640
@@ -20,8 +20,8 @@ class FaceEngine:
         self.app = self._initialize_model(people)
 
         # Informazioni su tutte le persone del database
-        self.feature_matrix = None
-        self.user_map = []
+        self.FeatureMatrix : np.ndarray | None = None
+        self.user_map: list[Person] = []
         
     def _initialize_model(self, people):
 
@@ -65,23 +65,23 @@ class FaceEngine:
         
         logger.info("--- DOWNLOAD DELLE PERSONE DAL DATABASE ---")
 
-        all_embeddings = []
-        self.user_map = []
+        AllEmbeddings = []
+        self.UserMap = []
 
         # Creiamo un sistema di riconoscimento {id: vettore} e salviamo poi un 
         # indice e una matrice gigante per svolgere i calcoli di riconoscimento
         for person in people:
             for hash, vector in person.encoding.items():
                 np_vector = np.array(vector, dtype=np.float32)
-                all_embeddings.append(np_vector)
-                self.user_map.append(str(person.id))
+                AllEmbeddings.append(np_vector)
+                self.UserMap.append(person)
 
         # se ci sono volti creo la matrice di tutti i volti        
-        if len(all_embeddings) > 0:
-            self.feature_matrix = np.vstack(all_embeddings)
-            logger.debug(f"Database caricato: {self.feature_matrix.shape[0]} volti totali.")
+        if len(AllEmbeddings) > 0:
+            self.FeatureMatrix = np.vstack(AllEmbeddings)
+            logger.debug(f"Database caricato: {self.FeatureMatrix.shape[0]} volti totali.")
         else:
-            self.feature_matrix = None
+            self.FeatureMatrix = None
             logger.debug("Database vuoto.")
         return model
 
@@ -94,29 +94,15 @@ class FaceEngine:
         return faces
     
 
-
-    def compare_embeddings(self, known_embeddings, target_embedding, threshold=0.5):
-
-        sims = np.dot(known_embeddings, target_embedding)
-        
-        # Trova il punteggio più alto
-        best_idx = np.argmax(sims)
-        max_score = sims[best_idx]
-        
-        if max_score > threshold:
-            return best_idx, max_score
-        
-        return None, max_score
-
     def identify(self, target_embedding, threshold=0.5):
 
-        if self.feature_matrix is None:
+        if self.FeatureMatrix is None:
             return None, 0.0
 
         # CALCOLO VETTORIALE (Dot Product) ---
         # Moltiplica il vettore target (1x512) per la matrice (Nx512)
         # Il risultato è un array di N punteggi di somiglianza
-        scores = np.dot(self.feature_matrix, target_embedding)
+        scores = np.dot(self.FeatureMatrix, target_embedding)
         
         # TROVA IL MIGLIORE
         best_index = np.argmax(scores)   
@@ -125,10 +111,10 @@ class FaceEngine:
         #VERIFICA SOGLIA
         if max_score > threshold:
             # Usiamo l'indice per recuperare i dati dalla lista parallela
-            id = self.user_map[best_index]
-            return id, float(max_score)
+            person = self.UserMap[best_index]
+            return person, float(max_score)
         
-        return None, float(max_score) # None per identificare gli sconosciuti
+        return "Unknown", float(max_score) # None per identificare gli sconosciuti
 
 
 engine = FaceEngine()
