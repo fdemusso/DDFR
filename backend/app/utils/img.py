@@ -61,7 +61,7 @@ class ImgValidation:
         if path is None or not os.path.exists(path):
             return False  
         name, ext = os.path.splitext(path)
-        if(ext == "png" ):
+        if ext.lower() == ".png":
             return True
         return False
 
@@ -81,7 +81,9 @@ class ImgValidation:
         if delete is None:
             delete = False
         
-        name, ext = os.path.splitext(path)
+        # Estrae solo il nome del file senza percorso e senza estensione
+        filename_with_ext = os.path.basename(path)
+        name, ext = os.path.splitext(filename_with_ext)
         filepng = ImgValidation.ConvertAnyToPng(path, name, ext, delete)
         if ImgValidation.validate_png(filepng):
             hash = ImgValidation.hash_img(filepng)

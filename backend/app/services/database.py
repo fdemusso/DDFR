@@ -265,6 +265,7 @@ class Database():
         if oid is None:
             logger.warning(f"ID non valido per aggiornamento: {person_id}")
             return None
+            
         
         if person_id != str(oid):
             logger.warning(f"ID non coerente per aggiornamento: {person_id} vs {str(oid)}")

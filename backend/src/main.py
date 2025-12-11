@@ -104,7 +104,7 @@ def webcamstream(collection):
 
         #Riconosco i volti 
                 
-        face_locations = face_recognition.face_locations(rgb_small_frame)
+        face_locations = face_recognition.face_locations(rgb_small_frame , number_of_times_to_upsample=1)
         face_encodings = face_recognition.face_encodings(rgb_small_frame, face_locations)
 
         # ottengo i nomi dei volti riconosciuti

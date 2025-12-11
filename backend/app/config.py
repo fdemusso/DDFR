@@ -31,6 +31,7 @@ class APISettings(BaseSettings):
     app_name: str = "DDFR API"
     description: str = "API per il riconoscimento facciale e la gestione delle persone"
     app_version: str = "1.0.0"
+    tollerance: float = 0.5
     debug: bool = False
 
     class Config:
