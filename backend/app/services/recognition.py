@@ -67,11 +67,16 @@ class FaceEngine:
 
         all_embeddings = []
         self.user_map = []
+
+        # Creiamo un sistema di riconoscimento {id: vettore} e salviamo poi un 
+        # indice e una matrice gigante per svolgere i calcoli di riconoscimento
         for person in people:
             for hash, vector in person.encoding.items():
                 np_vector = np.array(vector, dtype=np.float32)
                 all_embeddings.append(np_vector)
                 self.user_map.append(str(person.id))
+
+        # se ci sono volti creo la matrice di tutti i volti        
         if len(all_embeddings) > 0:
             self.feature_matrix = np.vstack(all_embeddings)
             logger.debug(f"Database caricato: {self.feature_matrix.shape[0]} volti totali.")
@@ -103,6 +108,27 @@ class FaceEngine:
         
         return None, max_score
 
+    def identify(self, target_embedding, threshold=0.5):
+
+        if self.feature_matrix is None:
+            return None, 0.0
+
+        # CALCOLO VETTORIALE (Dot Product) ---
+        # Moltiplica il vettore target (1x512) per la matrice (Nx512)
+        # Il risultato è un array di N punteggi di somiglianza
+        scores = np.dot(self.feature_matrix, target_embedding)
+        
+        # TROVA IL MIGLIORE
+        best_index = np.argmax(scores)   
+        max_score = scores[best_index]   # Il valore del punteggio
+        
+        #VERIFICA SOGLIA
+        if max_score > threshold:
+            # Usiamo l'indice per recuperare i dati dalla lista parallela
+            id = self.user_map[best_index]
+            return id, float(max_score)
+        
+        return None, float(max_score) # None per identificare gli sconosciuti
 
 
 engine = FaceEngine()
