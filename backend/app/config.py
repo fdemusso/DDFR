@@ -33,6 +33,8 @@ class APISettings(BaseSettings):
     app_version: str = "1.0.0"
     tollerance: float = 0.5
     debug: bool = False
+    keypath: str = "/Users/flaviodemusso/Desktop/DDFR/key.pem"
+    certpath: str = "/Users/flaviodemusso/Desktop/DDFR/cert.pem"
 
     class Config:
         env_file = ENV_FILE_PATH

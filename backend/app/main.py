@@ -67,13 +67,6 @@ app.add_middleware(
 )
 
 
-DATASET = database.Database(
-    url=set.url,
-    name=set.name,
-    collection=set.collection,
-)
-
-
 # Inclusione dei router
 app.include_router(websocket.router)
 app.include_router(route.router)  # API HTTP classiche
@@ -82,3 +75,32 @@ app.include_router(route.router)  # API HTTP classiche
 @app.get("/")
 def read_root():
     return {"message": "Server Face Recognition attivo"}
+
+if __name__ == "__main__":
+    import uvicorn
+    import sys
+    from app.config import api_settings
+
+    use_https = "https" in sys.argv
+
+    if use_https:
+        print("Modalità HTTPS attiva, assicurati di aver installato correttamente i certificati")
+
+        # Configurazione e avvio del app
+
+        uvicorn.run(
+            "main:app",
+            host="0.0.0.0",
+            port = 8000,
+            ssl_keyfile= api_settings.keypath,
+            ssl_certfile= api_settings.certpath,
+            reload= True
+        )
+    else:
+        print("Modalità HTTP attiva")
+        uvicorn.run(
+            "main:app",
+            host="127.0.0.1",
+            port = 8000,
+            reload= True
+        )
