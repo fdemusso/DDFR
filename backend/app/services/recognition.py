@@ -114,7 +114,7 @@ class FaceEngine:
             person = self.UserMap[best_index]
             return person, float(max_score)
         
-        return "Unknown", float(max_score) # None per identificare gli sconosciuti
+        return None, float(max_score) # None per identificare gli sconosciuti
 
 
 engine = FaceEngine()

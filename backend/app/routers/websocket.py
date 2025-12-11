@@ -6,166 +6,129 @@ import base64
 import json
 import time
 
+# Import corretti per la tipizzazione
+from insightface.app.common import Face
+from models.person import Person
+from typing import List, Tuple, Optional
+
 from config import database_settings as set, api_settings
 from services import database
 import services.recognition as fr
-
 
 # Configurazione iniziale
 logger = logging.getLogger(__name__)
 router = APIRouter()
 
-TOLLERANCE = api_settings.tollerance
+# Caricamento SINGOLO all'avvio 
 DATASET = database.Database(
-        url=set.url,
-        name=set.name,
-        collection=set.collection,
-    )
-    
-people = DATASET.get_all_people()
-engine = fr.FaceEngine(people)
+    url=set.url,
+    name=set.name,
+    collection=set.collection,
+)
+people = DATASET.get_all_people() 
+engine = fr.FaceEngine(people)   
 
 @router.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):
-    try:
-        await websocket.accept()
-        logger.info(f"Client WebSocket connesso da {websocket.client}")
-    except Exception as e:
-        logger.error(f"Errore durante l'accettazione della connessione WebSocket: {e}")
-        raise
+    await websocket.accept()
+    logger.info(f"Client WebSocket connesso da {websocket.client}")
 
     try:
-
-        start_time = time.time()
         while True:
-            #Ricezione dati
+            # Ricezione dati
             data = await websocket.receive_text()
 
-            #Parsing Immagine (Base64 -> OpenCV)
+            # Parsing Immagine (Base64 -> OpenCV)
             try:
                 if ',' in data:
-                    header, encoded = data.split(",", 1)
+                    encoded = data.split(",", 1)[1] # Ottimizzato: prendiamo subito la parte dopo la virgola
                 else:
                     encoded = data
                 
+                # frombuffer è rapidissimo
                 image_bytes = base64.b64decode(encoded)
                 np_arr = np.frombuffer(image_bytes, np.uint8)
                 frame = cv2.imdecode(np_arr, cv2.IMREAD_COLOR)
 
                 if frame is None:
-                    logger.warning("Impossibile decodificare il frame ricevuto")
                     continue
             except Exception as e:
-                logger.error(f"Errore durante il parsing dell'immagine: {e}")
+                logger.error(f"Errore parsing immagine: {e}")
                 continue
 
-            #Riconoscimento dei volti
-            t0 = time.time()
-            faces = engine.analyze_frame(frame)
-            t1 = time.time()
-            inference_time = (t1 - t0) * 1000 # a fine statistici
-
+            # t0 = time.time() # Scommenta per debuggare le performance
             
+            # Restituisce una lista di oggetti Face. Se vuota, faces = []
+            faces: List[Face] = engine.analyze_frame(frame)
             
-            if process_this_frame:
-                face_id = []
-                now = time.time()
-                
-                # Verifica che il sistema di riconoscimento sia inizializzato
-                if faces.UserMap is None or DATASET is None:
-                    logger.warning("Sistema di riconoscimento non inizializzato, saltando il riconoscimento")
-                    #TODO: verificare sia corretto
-                else:
+            # t1 = time.time()
+            # logger.info(f"Inference: {(t1-t0)*1000:.1f}ms - Volti: {len(faces)}")
 
-                    for face_encoding in face_encodings:
-                        try:
-                            # Confronto con i volti noti
-                            matches = fr.face_recognition.compare_faces(faces.known_face_encodings, face_encoding, TOLLERANCE)
-                            id = None
+            # Identificazione
+            # Creiamo una lista vuota per QUESTO frame specifico
+            found_people_list: List[Tuple[Optional[Person], Face]] = []
 
-                            # Uso il volto più simile
-                            face_distances = fr.face_recognition.face_distance(faces.known_face_encodings, face_encoding)
-                            best_match_index = np.argmin(face_distances)
-                            if matches[best_match_index]:
-                                id = faces.know_face_id[best_match_index]
-
-                            face_id.append(id)
-                        except Exception as e:
-                            logger.error(f"Errore durante il riconoscimento facciale: {e}")
-                            face_id.append(None)
-
-            process_this_frame = not process_this_frame 
-
-            face_names = []
-            if faces is not None:
-                for id in face_id:
-                    found = False
-                    for people in faces.know_people:
-                        if people.id == id:
-                            name = people.name
-                            face_names.append(name)
-                            found = True
-                            break
-                    if not found:
-                        face_names.append("Unknown")
-            else:
-                face_names = ["Unknown"] * len(face_id)
-                        
+            # Controllo di sicurezza se il motore è pronto
+            if engine.feature_matrix is not None:
+                for face in faces:
+                    # Identify restituisce (Person Object, score) oppure (None, score)
+                    found_person, score = engine.identify(face.embedding, threshold=0.5)
                     
-            faces_data = []
-            # Costruiamo un oggetto completo per ogni volto rilevato
-            # (top, right, bottom, left) sono le coordinate restituite da face_recognition
-            for (top, right, bottom, left), name, id in zip(face_locations, face_names, face_id):
-                person_data = None
+                    
+                    found_people_list.append((found_person, face))
+            else:
+                # Se il DB è vuoto ma vedo facce, le aggiungo come sconosciuti
+                for face in faces:
+                    found_people_list.append((None, face))
 
-                if id is not None and faces is not None:
-                    for people in faces.know_people:
-                        if people.id == id:
-                            person_data = people
-                            break
+            # Costruzione JSON Risposta
+            faces_data = []
+            
+            for person_data, face in found_people_list:
+                
+
+                bbox = face.bbox.astype(int)
+                left, top, right, bottom = int(bbox[0]), int(bbox[1]), int(bbox[2]), int(bbox[3])
+
+                face_dict = {
+                    "id": f"{top}_{left}", # ID temporaneo per il frontend
+                    "top": top,
+                    "right": right,
+                    "bottom": bottom,
+                    "left": left#,
+                    #  Extra di InsightFace
+                    # "sex": "M" if face.sex == 1 else "F",
+                    # "age": int(face.age)
+                }
 
                 if person_data is not None:
-                    # Persona riconosciuta
+                    # --- CONOSCIUTO ---
                     relationship = getattr(person_data.relationship, "value", person_data.relationship)
                     role = getattr(person_data.role, "value", person_data.role)
 
-                    face_dict = {
-                        "id": f"{top}_{left}",
+                    face_dict.update({
                         "name": person_data.name,
                         "surname": person_data.surname,
-                        "age": person_data.age,
+                        "age": person_data.age, 
                         "relationship": relationship,
                         "role": role,
-                        "top": top * 4,
-                        "right": right * 4,
-                        "bottom": bottom * 4,
-                        "left": left * 4,
-                    }
+                    })
                 else:
-                    # Volto sconosciuto
-                    face_dict = {
-                        "id": f"{top}_{left}",
+                    # --- SCONOSCIUTO ---
+                    face_dict.update({
                         "name": "Unknown",
                         "surname": None,
                         "age": 0,
                         "relationship": None,
                         "role": None,
-                        "top": top * 4,
-                        "right": right * 4,
-                        "bottom": bottom * 4,
-                        "left": left * 4,
-                    }
+                    })
 
                 faces_data.append(face_dict)
 
-            # 6. Risposta
+            # 6. Invio al Client
             await websocket.send_text(json.dumps({"status": "ok", "faces": faces_data}))
 
     except WebSocketDisconnect:
         logger.info("Client WebSocket disconnesso")
     except Exception as e:
-        logger.critical(f"Errore WebSocket: {e}", exc_info=True)
-        try:
-            await websocket.close()
-        except:
-            pass
+        logger.critical(f"Errore Critico WebSocket: {e}", exc_info=True)
