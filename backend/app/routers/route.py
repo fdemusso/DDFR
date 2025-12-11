@@ -2,10 +2,10 @@ from fastapi import APIRouter, HTTPException
 import logging
 
 # Import corretti usando il package "app"
-from app.services.recognition import FaceSystem
-from app.services.database import Database
-from app.config import database_settings as set
-from app.models.person import Person
+from services.recognition import FaceSystem
+from services.database import Database
+from config import database_settings as set
+from models.person import Person
 
 logger = logging.getLogger(__name__)
 router = APIRouter()

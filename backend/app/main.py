@@ -6,8 +6,8 @@ import os
 from datetime import datetime
 from contextlib import asynccontextmanager
 
-from app.config import database_settings as set, path_settings, api_settings
-from app.services import database
+from config import database_settings as set, path_settings, api_settings
+from services import database
 
 # Configurazione del logging
 # IMPORTANTE: il logging va configurato PRIMA di importare router o altri moduli
@@ -33,8 +33,8 @@ logger = logging.getLogger(__name__)
 
 # Solo dopo aver configurato il logging importiamo i router,
 # così anche i log eseguiti in fase di import vengono registrati.
-from app.routers import websocket  # noqa: E402
-from app.routers import route      # noqa: E402
+from routers import websocket  # noqa: E402
+from routers import route      # noqa: E402
 
 
 # Lifespan: gestisce startup e shutdown dell’app in un solo contesto
@@ -79,7 +79,7 @@ def read_root():
 if __name__ == "__main__":
     import uvicorn
     import sys
-    from app.config import api_settings
+    from config import api_settings
 
     use_https = "https" in sys.argv
 

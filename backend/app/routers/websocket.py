@@ -6,9 +6,9 @@ import base64
 import json
 import time
 
-from app.config import database_settings as set, api_settings
-from app.services import database
-import app.services.recognition as fr
+from config import database_settings as set, api_settings
+from services import database
+import services.recognition as fr
 
 
 logger = logging.getLogger(__name__)

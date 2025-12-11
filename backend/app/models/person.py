@@ -3,7 +3,7 @@ from pydantic import BaseModel, Field, field_validator, computed_field, ConfigDi
 from typing import Optional, Annotated
 from datetime import date, datetime 
 from bson import ObjectId 
-from app.utils.constants import RelationshipType, RoleType
+from utils.constants import RelationshipType, RoleType
 
 logger = logging.getLogger(__name__)
 

@@ -3,7 +3,7 @@ import logging
 import pillow_heif as heif
 import os
 from PIL import Image
-from app.config import path_settings
+from config import path_settings
 logger = logging.getLogger(__name__)
 
 class ImgValidation:

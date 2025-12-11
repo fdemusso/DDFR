@@ -7,9 +7,9 @@ from bson import ObjectId, errors
 from pymongo import ReturnDocument
 from pymongo.errors import DuplicateKeyError, WriteConcernError, ConnectionFailure, ServerSelectionTimeoutError
 from datetime import datetime, date
-from app.models.person import Person  
+from models.person import Person  
 from pymongo.uri_parser import parse_uri
-from app.utils.constants import RoleType  
+from utils.constants import RoleType  
 
 logger = logging.getLogger(__name__)
 

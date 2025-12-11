@@ -1,9 +1,9 @@
 import face_recognition
 import logging
 import os
-from app.services.database import Database
-from app.utils.img import ImgValidation
-from app.models.person import Person
+from services.database import Database
+from utils.img import ImgValidation
+from models.person import Person
 logger = logging.getLogger(__name__)
 
 class FaceSystem():
