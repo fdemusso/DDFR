@@ -13,22 +13,24 @@ from utils.constants import RoleType
 
 os.makedirs(path_settings.logfolder, exist_ok=True)
 log_filename = os.path.join(
-    path_settings.logfolder, f"local-{datetime.now().strftime('%Y%m%d-%H%M%S')}.log"
+    path_settings.logfolder, f"insertdata-{datetime.now().strftime('%Y%m%d-%H%M%S')}.log"
 )
 
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s - %(levelname)s - %(message)s",
-    handlers=[logging.FileHandler(log_filename), logging.StreamHandler()],
-)
+root_logger = logging.getLogger()
+if not root_logger.handlers:
+    logging.basicConfig(
+        level=logging.INFO,
+        format="%(asctime)s - %(levelname)s - %(name)s - %(message)s",
+        handlers=[logging.FileHandler(log_filename), logging.StreamHandler()],
+    )
 
 logger = logging.getLogger(__name__)
 
 
 def _build_demo_person() -> Person:
     return Person(
-        name="Flavio",
-        surname="De Musso",
+        name="Vincenzo",
+        surname="Rotolo",
         birthday=datetime(2005, 6, 17),
         role=RoleType.GUEST,
     )

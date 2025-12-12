@@ -95,7 +95,7 @@ class FaceEngine:
         return faces
     
     def analyze_img(self, path):
-        pic = img.ImgValidation(path)
+        pic = img.ImgValidation(path, delete=True)
 
         if pic.path is None:
             return None
