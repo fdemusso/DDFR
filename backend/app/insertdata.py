@@ -48,7 +48,7 @@ def main() -> None:
     demo_person = _build_demo_person()
     
     all_encodings = {} 
-    folder = Path("/Users/flaviodemusso/Desktop/DDFR/backend/app/img")
+    folder = Path(path_settings.imgsfolder)
     
     for elemento in folder.iterdir():
         if elemento.is_file() and not elemento.name.startswith('.'):

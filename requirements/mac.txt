@@ -1,0 +1,5 @@
+# Include tutte le dipendenze base
+-r base.txt
+
+# ONNX Runtime standard (supporta Apple Silicon con CoreML)
+onnxruntime>=1.16.0

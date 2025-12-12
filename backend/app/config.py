@@ -1,8 +1,14 @@
 from pydantic_settings import BaseSettings
 import os
+from datetime import datetime
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+# Vai alla directory backend (un livello sopra app/)
+BACKEND_DIR = os.path.dirname(BASE_DIR)
 ENV_FILE_PATH = os.path.join(BASE_DIR, ".env")
+
+# Genera timestamp unico all'avvio dell'applicazione
+_STARTUP_TIMESTAMP = datetime.now().strftime('%Y%m%d-%H%M%S')
 
 class DatabaseSettings(BaseSettings):
     url: str = "mongodb://localhost:27017/"
@@ -17,7 +23,7 @@ class DatabaseSettings(BaseSettings):
         extra = "ignore"
 
 class PathSettings(BaseSettings):
-    logfolder: str = os.path.join(BASE_DIR, "logs") 
+    logfolder: str = os.path.join(BACKEND_DIR, f"logs-{_STARTUP_TIMESTAMP}")
     imgsfolder: str = os.path.join(BASE_DIR, "img")
     
     class Config:

@@ -1,6 +1,5 @@
 # Per il riconoscimento facciale (insightface invece di face_recognition)
 insightface>=0.7.3
-onnxruntime>=1.16.0
 
 # Per la gestione immagini
 Pillow>=10.0.0
