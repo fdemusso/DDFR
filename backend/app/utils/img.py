@@ -28,11 +28,9 @@ class ImgValidation:
         if ext == ".png" and filepng == path:
             return path
 
-        # Registrazione HEIC (solo se serve)
         if ext == ".heic":
             heif.register_heif_opener()
 
-        # Formati supportati
         supported_ext = [".png", ".jpg", ".jpeg", ".bmp", ".tiff", ".gif", ".heic"]
 
         if ext not in supported_ext:
@@ -46,11 +44,9 @@ class ImgValidation:
             logger.error(f"Errore durante la conversione: {e}")
             return None
 
-        # Provo a rimuovere l'originale
         try:
             if os.path.exists(path) and delete == True:
                 os.remove(path)
-                logger.debug(f"Rimosso {path}")
         except Exception as e:
             logger.error(f"Errore durante la rimozione {path} originale: {e}")
 
@@ -81,7 +77,6 @@ class ImgValidation:
         if delete is None:
             delete = False
         
-        # Estrae solo il nome del file senza percorso e senza estensione
         filename_with_ext = os.path.basename(path)
         name, ext = os.path.splitext(filename_with_ext)
         filepng = ImgValidation.ConvertAnyToPng(path, name, ext, delete)

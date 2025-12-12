@@ -14,8 +14,6 @@ from utils.constants import RoleType
 logger = logging.getLogger(__name__)
 
 class Database():
-
-    #Client attualmente connesso
     current_client = None 
 
     def __init__(self, url: str, name: str, collection: str):
@@ -24,8 +22,6 @@ class Database():
         self.name_db = name
         self.collection_name = collection
         self.get_connection(self.url)
-
-        # Revisione dell'architettura del database, potrebbe generare problemi
         self.patient: Optional[Person] = None
         self.patient = self.check_patient_existence()
 
@@ -37,12 +33,9 @@ class Database():
             self.current_client.admin.command('ping')
             return True      
         except (ConnectionFailure, ServerSelectionTimeoutError):
-            # Se il server non risponde o scade il tempo
             return False
 
     def check_patient_existence(self) -> Optional[Person] | None:
-        # Usa getattr per gestire il caso in cui l'attributo `patient`
-        # non venga inizializzato nel costruttore.
         cached_patient: Optional[Person] = getattr(self, "patient", None)
         if cached_patient is not None:
             return cached_patient
@@ -52,8 +45,6 @@ class Database():
         doc = collection.find_one(query)
         patient = self._person_from_doc(doc)
         if patient:
-            logger.info(f"Paziente esistente trovato nel DB: {patient.name} {patient.surname}")
-            # Manteniamo la cache in memoria se possibile
             self.patient = patient
         return patient
 
@@ -63,32 +54,20 @@ class Database():
             logger.error("URL di connessione non fornito.")
             return None
         
-        # CASO 1: Nessuna connessione esistente -> Creala
         if cls.current_client is None:
             try:
                 cls.current_client = pymongo.MongoClient(url)
-                # Test immediato (ping) per evitare connessioni fantasma
                 cls.current_client.admin.command('ping')
-                logger.info(f"Connessione al database stabilita su: {url}")
             except (pymongo.errors.ConnectionFailure, pymongo.errors.ConfigurationError) as e:
                 logger.critical(f"Errore critico di connessione al database: {e}")
-                cls.current_client = None # Resetta per evitare stati sporchi
+                cls.current_client = None
                 raise
-        
-        # CASO 2: Connessione esistente -> Verifica se l'URL è lo stesso
         else:
             try:
-                # Parsiamo l'URL stringa che ci è arrivato per estrarre (host, port)
                 parsed_uri = parse_uri(url)
-                # La lista 'nodelist' contiene tuple [(host, port), ...]
                 new_nodes = set(parsed_uri['nodelist'])
-                
-                # Otteniamo l'indirizzo della connessione attiva
-                # NOTE: .address può essere None se la connessione è stata persa o non ancora stabilita
                 current_node = cls.current_client.address 
                 
-                # Confronto
-                # Se l'indirizzo attivo non è tra quelli richiesti nel nuovo URL
                 if current_node and current_node not in new_nodes:
                     error_msg = (
                         f"Connessione già esistente con un host diverso.\n"
@@ -97,9 +76,6 @@ class Database():
                     )
                     logger.warning(error_msg)
                     raise ValueError(error_msg)
-                
-                # Se siamo qui, l'URL è compatibile, restituiamo il client esistente
-                
             except Exception as e:
                 logger.error(f"Errore durante la verifica dell'URL esistente: {e}")
 
@@ -112,9 +88,7 @@ class Database():
         if cls.current_client is not None:
             cls.current_client.close()
             cls.current_client = None
-            logger.info("Connessione al database chiusa.")
     
-    #Formattazione degli id di mongodb
     @staticmethod
     def convert_to_objectid(id_string: str) -> Optional[ObjectId]:
         if id_string is None:
@@ -127,19 +101,29 @@ class Database():
     
     @staticmethod
     def _person_to_document(person: Person) -> dict:
-        """Serializza un oggetto Person per Mongo, gestendo date ed Enums."""
-        
+        # Serializza Person per Mongo, gestendo date ed Enums
         person_dict = person.model_dump(by_alias=True, exclude_none=True)
         
         if person_dict.get("_id") is None:
             person_dict.pop("_id", None)
 
-        # Converti date in datetime (Fix per Mongo)
         if "birthday" in person_dict:
             b_day = person_dict["birthday"]
-            # Controlliamo se è strettamente un oggetto date (e non già datetime)
             if type(b_day) == date:
                 person_dict["birthday"] = datetime(b_day.year, b_day.month, b_day.day)
+
+        if "encoding" in person_dict and person_dict["encoding"] is not None:
+            encoding_dict = person_dict["encoding"]
+            if isinstance(encoding_dict, dict):
+                serialized_encoding = {}
+                for hash_key, encoding_value in encoding_dict.items():
+                    if isinstance(encoding_value, np.ndarray):
+                        serialized_encoding[hash_key] = encoding_value.tolist()
+                    elif isinstance(encoding_value, list):
+                        serialized_encoding[hash_key] = [float(x) for x in encoding_value]
+                    else:
+                        serialized_encoding[hash_key] = encoding_value
+                person_dict["encoding"] = serialized_encoding
 
         for key, value in person_dict.items():
             if hasattr(value, "value"):  
@@ -149,7 +133,6 @@ class Database():
 
     @staticmethod
     def _person_from_doc(doc: Optional[dict]) -> Optional[Person]:
-        """Ricostruisce un Person da un documento Mongo."""
         if doc is None:
             return None
         try:
@@ -173,23 +156,16 @@ class Database():
         collection = self.get_collection()
         person_dict = self._person_to_document(person)
 
-        # --- VALIDAZIONE PAZIENTE ---
-        # Gestisce correttamente il caso in cui `self.patient` non esista ancora.
         if person.role == RoleType.USER:
             if getattr(self, "patient", None) is not None:
                 logger.error("Impossibile inserire. Esiste già un paziente registrato.")
                 return None
         try:
             result = collection.insert_one(person_dict)
-            
             person.id = str(result.inserted_id)
             if person.role == RoleType.USER:
                 self.patient = person  
-            
-            logger.debug(f"Utente: {person.name} {person.surname} aggiunto al database con ID: {result.inserted_id}")
             return person
-
-        # --- GESTIONE ERRORI CON ROLLBACK ---
         
         except DuplicateKeyError as e:
             logger.error(f"Impossibile inserire. Chiave duplicata rilevata: {e}")
@@ -214,7 +190,6 @@ class Database():
     @staticmethod
     def _rollback_user_slot(person: Person):
         if person.role == RoleType.USER:
-            logger.warning("Rollback: Resetto lo slot User a causa di un errore DB.")
             Person.reset_user_slot()
         
     
@@ -229,8 +204,6 @@ class Database():
         result = collection.delete_one({"_id": oid})
 
         if result.deleted_count > 0:
-            logger.info(f"Persona con ID {person_id} rimossa correttamente.")
-            # Se abbiamo una cache del paziente e coincide con l'ID rimosso, azzeriamola
             cached_patient: Optional[Person] = getattr(self, "patient", None)
             if cached_patient is not None and str(cached_patient.id) == person_id:
                 self.patient = None
@@ -269,7 +242,7 @@ class Database():
         
         if person_id != str(oid):
             logger.warning(f"ID non coerente per aggiornamento: {person_id} vs {str(oid)}")
-            return None # Sanity check, WARNING: dovrebbe essere sempre coerente
+            return None
         
         if isinstance(update_data, Person):
             payload = self._person_to_document(update_data)
@@ -291,8 +264,6 @@ class Database():
 
         if updated_doc:
             person = self._person_from_doc(updated_doc)
-            if person:
-                logger.info(f"Aggiornata persona {person_id}.")
             return person
 
         logger.warning(f"Nessuna persona trovata con ID {person_id} per l'aggiornamento.")
@@ -313,7 +284,6 @@ class Database():
             if p is not None:
                     success_count += 1
 
-        logger.info(f"Aggiornamento bulk completato per {success_count} di {len(people)} persone.")
         return success_count
         
 
@@ -342,59 +312,8 @@ class Database():
         return known_ids, known_encodings
     
     def drop_database(self):
-
         client = self.get_connection(self.url)
         client.drop_database(self.name_db) 
-        logger.info(f"Database '{self.name_db}' eliminato con successo.")
-        # Reset di eventuale stato in memoria relativo al paziente
         if hasattr(self, "patient"):
             self.patient = None
         self.close_connection()
-        logger.info(f"Connessione con {self.url} terminata.")
-
-
-"""
-come usare database.py 
-==============================
-
-Setup iniziale
---------------
->>> db = Database(url=\"mongodb://localhost:27017\", name=\"ddfr\", collection=\"people\") OPPURE PER BUILD USARE CONFIG.PY
-
-Creare e salvare una persona
-----------------------------
->>> from datetime import date
->>> nuova = Person(name=\"Mario\", surname=\"Rossi\", birthday=date(1990, 1, 1))
->>> salvata = db.add_person(nuova)
->>> print(salvata.id)
-
-Ottenere tutte le persone (list[Person])
-----------------------------------------
->>> people = db.get_all_people()
->>> for person in people:
-...     print(person.name, person.age)
-
-Leggere una singola persona
----------------------------
->>> found = db.get_person(salvata.id)
->>> if found:
-...     print(found.relationship)
-
-Aggiornare i dati
------------------
->>> updated = db.update_person(
-...     salvata.id,
-...     {\"relationship\": RelationshipType.FIGLIO}
-... )
->>> if updated:
-...     print(updated.relationship)
-
-Rimuovere una persona
----------------------
->>> db.remove_person(salvata.id)
-
-Ottenere gli encoding facciali
-------------------------------
->>> names, encodings = db.get_all_encodings()
->>> print(len(encodings), \"encoding trovati\")
-"""

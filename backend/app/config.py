@@ -1,7 +1,6 @@
 from pydantic_settings import BaseSettings
 import os
 
-# Calcolo percorsi (questo era già corretto)
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 ENV_FILE_PATH = os.path.join(BASE_DIR, ".env")
 
@@ -15,7 +14,7 @@ class DatabaseSettings(BaseSettings):
         env_prefix = "DB_"
         env_file = ENV_FILE_PATH
         env_file_encoding = 'utf-8'
-        extra = "ignore"  # <--- AGGIUNGI QUESTO QUI
+        extra = "ignore"
 
 class PathSettings(BaseSettings):
     logfolder: str = os.path.join(BASE_DIR, "logs") 
@@ -25,7 +24,7 @@ class PathSettings(BaseSettings):
         env_prefix = "LOG_"
         env_file = ENV_FILE_PATH
         env_file_encoding = 'utf-8'
-        extra = "ignore"  # <--- AGGIUNGI QUESTO QUI
+        extra = "ignore"
 
 class APISettings(BaseSettings):
     app_name: str = "DDFR API"
@@ -39,9 +38,8 @@ class APISettings(BaseSettings):
     class Config:
         env_file = ENV_FILE_PATH
         env_file_encoding = 'utf-8'
-        extra = "ignore"  # <--- AGGIUNGI QUESTO QUI
+        extra = "ignore"
 
-# Istanze globali
 database_settings = DatabaseSettings()
 path_settings = PathSettings()
 api_settings = APISettings()
