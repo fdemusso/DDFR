@@ -1,0 +1,26 @@
+# Per il riconoscimento facciale (insightface invece di face_recognition)
+insightface>=0.7.3
+
+# Per la gestione immagini
+Pillow>=10.0.0
+pillow-heif>=0.13.0
+
+# Elaborazione immagini e numerica
+numpy>=1.24.0,<2.0.0
+opencv-python>=4.8.0,<4.9.0
+
+# Per FastAPI e server ASGI
+fastapi>=0.104.0
+uvicorn[standard]>=0.24.0
+
+# Database e gestione ambiente
+pymongo>=4.6.0
+python-dotenv>=1.0.0
+
+# Pydantic per modelli e configurazione
+pydantic>=2.5.0
+pydantic-settings>=2.1.0
+
+# Per garantire compatibilità e installazione pulita
+wheel>=0.42.0
+setuptools>=68.0.0

@@ -75,3 +75,5 @@ To start the local database server:
 
 ```bash
 nohup /Users/flaviodemusso/mongodb-macos-aarch64--8.2.2/bin/mongod --dbpath /Users/flaviodemusso/Desktop/DDFR/database --logpath /Users/flaviodemusso/Desktop/DDFR/database/mongodb.log > mongod.out 2>&1 &
+
+
