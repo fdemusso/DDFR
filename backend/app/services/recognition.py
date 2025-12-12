@@ -118,40 +118,42 @@ class FaceEngine:
         return {pic.hash : embedding_list}
     
 
-    def identify(self, target_embedding, threshold=0.5):
+    def identify(self, target_data, threshold=0.5):
         if self.FeatureMatrix is None:
             logger.warning("FeatureMatrix è None: database vuoto o non inizializzato")
-            return None, 0.0
+            n_items = len(target_data) if isinstance(target_data, list) else 1
+            return [(None, 0.0)] * n_items
 
-        if not isinstance(target_embedding, np.ndarray):
-            target_embedding = np.array(target_embedding, dtype=np.float32)
+        try:
+            input_matrix = np.array(target_data, dtype=np.float32)
+        except Exception as e:
+            logger.error(f"Errore conversione input: {e}")
+            return [(None, 0.0)]
         
-        if target_embedding.ndim > 1:
-            target_embedding = target_embedding.flatten()
+        if input_matrix.ndim == 1:
+            input_matrix = input_matrix.reshape(1, -1)
 
-        # Normalizzazione L2 del target embedding
-        target_norm = np.linalg.norm(target_embedding)
-        if target_norm > 0:
-            target_embedding = target_embedding / target_norm
-        else:
-            logger.warning("Target embedding ha norma zero, impossibile normalizzare")
-            return None, 0.0
+        # Normalizzazione L2 (Vettorializzata)
+        norms = np.linalg.norm(input_matrix, axis=1, keepdims=True)
+        # Evito la divisone per 0
+        norms[norms == 0] = 1e-10
+        normalized_matrix = input_matrix / norms
 
-        # FeatureMatrix è già pre-normalizzata all'inizializzazione
-        # Dot product su vettori normalizzati = cosine similarity
-        scores = np.dot(self.FeatureMatrix, target_embedding)
+        all_scores = np.dot(normalized_matrix, self.FeatureMatrix.T)
         
-        best_index = np.argmax(scores)   
-        max_score = scores[best_index]
+        best_indices = np.argmax(all_scores, axis=1)   
+        best_scores = np.max(all_scores, axis=1)
         
-        if best_index >= len(self.user_map):
-            logger.error(f"ERRORE: best_index ({best_index}) fuori dai limiti di user_map ({len(self.user_map)})")
-            return None, float(max_score)
+        results = []
+        for idx, score in zip(best_indices, best_scores):
+            if score > threshold:
+                if idx < len(self.user_map):
+                    results.append((self.user_map[idx], float(score))) # lista di persona : punteggio
+                else:
+                    logger.error(f"Index {idx} fuori range user_map")
+                    results.append((None, float(score)))
+            else:
+                results.append((None, float(score)))
         
-        if max_score > threshold:
-            person = self.user_map[best_index]
-            return person, float(max_score)
-        
-        return None, float(max_score)
-
+        return results
 

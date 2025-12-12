@@ -44,10 +44,19 @@ def process_image_sync(image_bytes):
     faces: List[Face] = engine.analyze_frame(frame)
     found_people_list: List[Tuple[Optional[Person], Face]] = []
 
+    # Nessun volto rilevato (uscita rapida)
+    if not faces:
+        return {"status": "ok", "faces": []}
+
+    # Abbiamo volti E il Database è attivo -> BATCH PROCESSING
     if engine.FeatureMatrix is not None:
-        for face in faces:
-            found_person, score = engine.identify(face.embedding, threshold=0.4)
+        embeddings = [face.embedding for face in faces]
+        identities = engine.identify(embeddings, threshold=0.4)
+        
+        for (found_person, score), face in zip(identities, faces):
             found_people_list.append((found_person, face))
+            
+    # Abbiamo volti MA il Database non c'è (Fallback)
     else:
         logger.error(f"FeatureMatrix None ma rilevati {len(faces)} volti")
         for face in faces:
