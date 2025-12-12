@@ -214,7 +214,17 @@ class Database():
     
     def get_all_people(self) -> list[Person]:
         collection = self.get_collection()
-        cursor = collection.find()
+        # Projection: carica solo i campi necessari per ottimizzare prestazioni
+        projection = {
+            "_id": 1,
+            "name": 1,
+            "surname": 1,
+            "encoding": 1,
+            "role": 1,
+            "relationship": 1,
+            "birthday": 1
+        }
+        cursor = collection.find({}, projection)
         people: list[Person] = []
         for doc in cursor:
             person = self._person_from_doc(doc)

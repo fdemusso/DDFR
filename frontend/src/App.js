@@ -1,180 +1,93 @@
-import React, { useRef, useState, useEffect } from 'react';
-import Webcam from 'react-webcam';
-import './App.css'; // Assicurati di importare il CSS
+import React, { useRef, useState, useMemo } from 'react';
+import './App.css';
+
+// Custom Hooks
+import { useWebSocket } from './hooks/useWebSocket';
+import { useWebcam } from './hooks/useWebcam';
+import { useFaceDetection } from './hooks/useFaceDetection';
+import { useLatency } from './hooks/useLatency';
+
+// Constants
+import { CAPTURE_WIDTH, CAPTURE_HEIGHT } from './utils/constants';
+
+// Componenti
+import WebcamView from './components/WebcamView';
+import FaceBox from './components/FaceBox';
+import StatusOverlay from './components/StatusOverlay';
+import CameraToggle from './components/CameraToggle';
+import DebugInfo from './components/DebugInfo';
 
 function App() {
   const webcamRef = useRef(null);
-  const ws = useRef(null);
-  const reconnectTimerRef = useRef(null);
   
-  const [faces, setFaces] = useState([]);
-  const [connectionStatus, setConnectionStatus] = useState("disconnected");
-  const [framesSent, setFramesSent] = useState(0);
+  // Stati locali
   const [isFrontCamera, setIsFrontCamera] = useState(true);
-  const [, setReconnectAttempts] = useState(0);
   const [isCameraReady, setIsCameraReady] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
 
-  // Forza transform per evitare specchiamento indesiderato
-  useEffect(() => {
-    const applyVideoTransform = () => {
-      // Nota: ora usiamo la classe .webcam-video definita nel CSS
-      const video = document.querySelector('.webcam-video');
-      if (video) {
-        // Su mobile "user" è spesso specchiato di default, "environment" no.
-        // Qui forziamo scaleX(1) per annullare mirror se la libreria lo applica.
-        video.style.transform = 'scaleX(1)'; 
+  // Hook personalizzati per gestione faces
+  const { faces, setFaces, framesSent, setFramesSent } = useFaceDetection();
+
+  // Hook per tracking latenza
+  const { latency, avgLatency, markSent, markReceived } = useLatency();
+
+  // Handler per messaggi WebSocket
+  const handleMessage = (data) => {
+    markReceived(); // Marca ricezione risposta per calcolo latenza
+    const rawFaces = Array.isArray(data.faces) ? data.faces : [];
+
+    const parsedFaces = rawFaces.map((f) => {
+      const name = (f.name || "").toString().trim();
+      const surname = (f.surname || "").toString().trim();
+      const fullNameRaw = [name, surname].filter(Boolean).join(" ").trim();
+
+      let age = f.age;
+      if (typeof age === "string") {
+        const n = parseInt(age, 10);
+        age = Number.isNaN(n) ? 0 : n;
       }
-    };
-    const interval = setInterval(applyVideoTransform, 500);
-    window.addEventListener('orientationchange', applyVideoTransform);
-    return () => {
-      clearInterval(interval);
-      window.removeEventListener('orientationchange', applyVideoTransform);
-    };
-  }, []);
 
-  // --- LOGICA WEBSOCKET ---
-  const getWebSocketUrl = () => {
-    const protocol = window.location.protocol === 'https:' ? 'wss' : 'ws';
-    const host = window.location.hostname;
-    const port = 8000; 
-    const wsUrl = `${protocol}://${host}:${port}/ws`;
-    console.log("Costruito URL WebSocket:", wsUrl, "da hostname:", host, "protocol:", protocol);
-    return wsUrl;
-  };
-
-  const scheduleReconnect = () => {
-    if (reconnectTimerRef.current) return;
-    const baseDelay = 3000;
-    const maxDelay = 15000;
-
-    setReconnectAttempts((prev) => {
-      const attempt = prev + 1;
-      const delay = Math.min(baseDelay * attempt, maxDelay);
-      reconnectTimerRef.current = setTimeout(() => {
-        reconnectTimerRef.current = null;
-        initWebSocket();
-      }, delay);
-      return attempt;
+      return {
+        ...f,
+        fullName: fullNameRaw || "UNKNOWN",
+        age,
+      };
     });
+
+    setFaces(parsedFaces);
+    setFramesSent(prev => prev + 1);
   };
 
-  const initWebSocket = () => {
-    try {
-      const wsUrl = getWebSocketUrl();
-      console.log("Tentativo di connessione WebSocket a:", wsUrl);
-      const socket = new WebSocket(wsUrl);
-      ws.current = socket;
+  // Hook WebSocket con riconnessione automatica
+  const { ws, connectionStatus, isProcessing } = useWebSocket(handleMessage);
 
-      socket.onopen = () => {
-        console.log("WS Connesso con successo a:", wsUrl);
-        setConnectionStatus("connected");
-        setReconnectAttempts(0);
-        if (reconnectTimerRef.current) clearTimeout(reconnectTimerRef.current);
-      };
+  // Hook per cattura e invio frame (con requestAnimationFrame)
+  const { captureCanvasRef } = useWebcam(webcamRef, ws, isProcessing, markSent);
 
-      socket.onclose = (event) => {
-        console.log("WS Disconnesso. Code:", event.code, "Reason:", event.reason, "WasClean:", event.wasClean);
-        setConnectionStatus("disconnected");
-        scheduleReconnect();
-      };
-
-      socket.onerror = (err) => {
-        console.error("Errore WebSocket:", err);
-        console.error("URL tentato:", wsUrl);
-        console.error("Dettagli errore:", {
-          type: err.type,
-          target: err.target,
-          currentTarget: err.currentTarget,
-          timeStamp: err.timeStamp
-        });
-        // Mostra anche l'errore nella console del browser
-        if (err.target && err.target.readyState !== WebSocket.OPEN) {
-          console.error("Stato WebSocket:", err.target.readyState, "(0=CONNECTING, 1=OPEN, 2=CLOSING, 3=CLOSED)");
-        }
-        setConnectionStatus("error");
-        scheduleReconnect();
-      };
-
-      socket.onmessage = (event) => {
-        const data = JSON.parse(event.data);
-
-        // Ora il backend invia già un oggetto completo per ogni volto:
-        // { id, name, surname, age, relationship, role, top, right, bottom, left }
-        const rawFaces = Array.isArray(data.faces) ? data.faces : [];
-
-        const parsedFaces = rawFaces.map((f) => {
-          const name = (f.name || "").toString().trim();
-          const surname = (f.surname || "").toString().trim();
-          const fullNameRaw = [name, surname].filter(Boolean).join(" ").trim();
-
-          let age = f.age;
-          if (typeof age === "string") {
-            const n = parseInt(age, 10);
-            age = Number.isNaN(n) ? 0 : n;
-          }
-
-          return {
-            ...f,
-            fullName: fullNameRaw || "UNKNOWN",
-            age,
-          };
-        });
-
-        setFaces(parsedFaces);
-      };
-    } catch (e) {
-      setConnectionStatus("error");
-      scheduleReconnect();
+  // Calcolo scale factors con useMemo (ottimizzazione)
+  // Le coordinate dal backend sono basate sul frame ridimensionato (CAPTURE_WIDTH x CAPTURE_HEIGHT)
+  // quindi dobbiamo scalare da quelle dimensioni alle dimensioni mostrate del video
+  const { scaleX, scaleY } = useMemo(() => {
+    const videoEl = webcamRef.current?.video;
+    if (!videoEl || !videoEl.clientWidth || !videoEl.clientHeight) {
+      return { scaleX: 1, scaleY: 1 };
     }
-  };
-
-  useEffect(() => {
-    initWebSocket();
-    return () => {
-      if (ws.current) ws.current.close();
-      if (reconnectTimerRef.current) clearTimeout(reconnectTimerRef.current);
+    
+    return {
+      scaleX: videoEl.clientWidth / CAPTURE_WIDTH,
+      scaleY: videoEl.clientHeight / CAPTURE_HEIGHT,
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [faces]); // Ricalcola quando cambiano i faces
 
-  // Invio Frame
-  useEffect(() => {
-    const interval = setInterval(() => {
-      if (
-        webcamRef.current &&
-        webcamRef.current.video.readyState === 4 &&
-        ws.current.readyState === WebSocket.OPEN
-      ) {
-        captureAndSend();
-      }
-    }, 100); 
-    return () => clearInterval(interval);
-  }, []);
-
-  const captureAndSend = () => {
-    const imageSrc = webcamRef.current.getScreenshot();
-    if (imageSrc) {
-      ws.current.send(imageSrc); 
-      setFramesSent((prev) => prev + 1);
-    }
-  };
-
+  // Handler fullscreen
   const requestFullscreen = () => {
     const el = document.documentElement;
-    // Tenta fullscreen standard
-    if (el.requestFullscreen) el.requestFullscreen().catch(() => {});
-    else if (el.webkitRequestFullscreen) el.webkitRequestFullscreen();
+    if (el.requestFullscreen) {
+      el.requestFullscreen().catch(() => {});
+    } else if (el.webkitRequestFullscreen) {
+      el.webkitRequestFullscreen();
+    }
     setIsFullscreen(true);
-  };
-
-  // Video Constraints: Usa aspect ratio verticale per mobile se vuoi riempire meglio,
-  // ma object-fit: cover nel CSS farà il grosso del lavoro.
-  const videoConstraints = {
-    facingMode: isFrontCamera ? "user" : { exact: "environment" },
-    width: { ideal: 1920 }, // Alziamo la risoluzione richiesta
-    height: { ideal: 1080 }
   };
 
   return (
@@ -182,109 +95,63 @@ function App() {
       {/* Loading Screen */}
       {!isCameraReady && (
         <div style={{
-            position: 'fixed', inset: 0, background: '#000', zIndex: 100,
-            display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: '#00ff88'
-          }}>
+          position: 'fixed', inset: 0, background: '#000', zIndex: 100,
+          display: 'flex', flexDirection: 'column', alignItems: 'center', 
+          justifyContent: 'center', color: '#00ff88'
+        }}>
           <div className="spinner" style={{
-              width: 50, height: 50, border: '3px solid #333', borderTopColor: '#00ff88', borderRadius: '50%',
-              animation: 'spin 1s linear infinite', marginBottom: 20
-          }}/>
+            width: 50, height: 50, border: '3px solid #333', 
+            borderTopColor: '#00ff88', borderRadius: '50%',
+            animation: 'spin 1s linear infinite', marginBottom: 20
+          }} />
           <div>Inizializzazione Camera...</div>
           <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
         </div>
       )}
 
-      <div className="video-container" onClick={() => !isFullscreen && requestFullscreen()}>
-        
-        {/* Debug Overlay */}
-        <div className="status-overlay">
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
-            <span className="material-symbols-outlined" style={{ fontSize: 16 }}>lan</span>
-            <span>SYSTEM_STATUS</span>
-          </div>
-          <div>WS: <span style={{color: connectionStatus==='connected'?'#00ff88':'#ff4444'}}>{connectionStatus}</span></div>
-          <div>FRAMES: {framesSent}</div>
-          <div>TARGETS: {faces.length}</div>
-        </div>
-        
-        {/* Layer 1: Webcam */}
-        {/* Nota l'attributo className="webcam-video" che si collega al CSS */}
-        <Webcam
-            audio={false}
-            ref={webcamRef}
-            screenshotFormat="image/jpeg"
-            videoConstraints={videoConstraints}
-            mirrored={false} 
-            className="webcam-video" 
-            onUserMedia={() => setIsCameraReady(true)}
-            key={isFrontCamera ? "front" : "back"}
+      <div
+        className="video-container"
+        style={{ position: 'relative' }}
+        onClick={() => !isFullscreen && requestFullscreen()}
+      >
+        {/* Status Overlay */}
+        <StatusOverlay 
+          connectionStatus={connectionStatus}
+          framesSent={framesSent}
+          facesCount={faces.length}
+          latency={latency}
+          avgLatency={avgLatency}
+        />
+
+        {/* Webcam View */}
+        <WebcamView
+          webcamRef={webcamRef}
+          isFrontCamera={isFrontCamera}
+          onCameraReady={() => setIsCameraReady(true)}
+          isFullscreen={isFullscreen}
+          onRequestFullscreen={requestFullscreen}
+        />
+
+        {/* Camera Toggle Button */}
+        <CameraToggle
+          isFrontCamera={isFrontCamera}
+          onToggle={() => setIsFrontCamera(!isFrontCamera)}
+        />
+
+        {/* Face Boxes */}
+        {faces.map((face, index) => (
+          <FaceBox
+            key={face.id || index}
+            face={face}
+            scaleX={scaleX}
+            scaleY={scaleY}
+            index={index}
           />
-
-        {/* Layer 2: Bottone Glassmorphism Custom */}
-        <div className="camera-toggle-wrapper">
-          <button 
-            className="glass-button"
-            onClick={(e) => {
-              e.stopPropagation(); // Evita che il click sul bottone attivi il fullscreen
-              setIsFrontCamera(!isFrontCamera);
-            }}
-          >
-            <span className="material-symbols-outlined">switch_camera</span>
-          </button>
-        </div>
-
-        {/* Layer 3: Riquadri Volti (CSS migliorato) */}
-        {faces.map((face, index) => {
-          // Calcolo dinamico della posizione per adattarsi al video 'cover'
-          // Nota: Questo calcolo presuppone che il backend mandi coordinate relative al frame video originale.
-          // Se il video viene tagliato dal CSS object-fit: cover, le coordinate potrebbero sfasare leggermente 
-          // a seconda di come il browser centra il video. 
-          // Per una precisione millimetrica servirebbe calcolare l'aspect ratio, ma per ora usiamo % o px diretti.
-          
-          const displayName = (face.fullName || face.name || "").toString().trim();
-          const nameNormalized = displayName.toLowerCase();
-          const isUnknown = !nameNormalized || nameNormalized.includes("sconosciuto") || nameNormalized === "unknown";
-
-          const roleNormalized = (face.role || "").toString().trim().toLowerCase();
-
-          let roleClass = "";
-          if (isUnknown) {
-            roleClass = "role-unknown";
-          } else if (roleNormalized === "user") {
-            roleClass = "role-user";
-          } else if (roleNormalized === "guest") {
-            roleClass = "role-guest";
-          }
-
-          return (
-            <div
-              key={index}
-              className={`face-box ${isUnknown ? 'unknown' : ''} ${roleClass}`}
-              style={{
-                top: face.top,
-                left: face.left,
-                width: face.right - face.left,
-                height: face.bottom - face.top,
-              }}
-            >
-              <div className="face-label">
-                {displayName || "UNKNOWN"}
-                {typeof face.age === "number" && face.age > 0 && (
-                  <span className="face-age">, {face.age}</span>
-                )}
-              </div>
-              
-              {/* Relationship come etichetta tipo apice in basso, tranne per ruolo user */}
-              {!isUnknown && roleNormalized !== "user" && face.relationship && (
-                <div className="face-relationship">
-                  {face.relationship}
-                </div>
-              )}
-            </div>
-          );
-        })}
-
+        ))}
       </div>
+
+      {/* Debug Info - Rimuovere dopo il debug */}
+      <DebugInfo />
     </div>
   );
 }

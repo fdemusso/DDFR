@@ -9,6 +9,7 @@ mongod.out
 
 cert.pem
 key.pem
+*.pem
 
 # Ignore image files
 *.png

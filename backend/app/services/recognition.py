@@ -81,6 +81,12 @@ class FaceEngine:
                 raise ValueError("Inconsistenza tra user_map e FeatureMatrix")
             if np.any(np.isnan(self.FeatureMatrix)) or np.any(np.isinf(self.FeatureMatrix)):
                 logger.error("FeatureMatrix contiene valori NaN o Inf!")
+            
+            # Pre-normalizza la FeatureMatrix una volta sola (ottimizzazione prestazioni)
+            feature_norms = np.linalg.norm(self.FeatureMatrix, axis=1, keepdims=True)
+            feature_norms[feature_norms == 0] = 1.0
+            self.FeatureMatrix = self.FeatureMatrix / feature_norms
+            logger.info(f"FeatureMatrix pre-normalizzata: {self.FeatureMatrix.shape[0]} embeddings")
         else:
             self.FeatureMatrix = None
             logger.warning("Database vuoto: nessun encoding trovato.")
@@ -123,7 +129,7 @@ class FaceEngine:
         if target_embedding.ndim > 1:
             target_embedding = target_embedding.flatten()
 
-        # Normalizzazione L2 per confronti corretti
+        # Normalizzazione L2 del target embedding
         target_norm = np.linalg.norm(target_embedding)
         if target_norm > 0:
             target_embedding = target_embedding / target_norm
@@ -131,12 +137,9 @@ class FaceEngine:
             logger.warning("Target embedding ha norma zero, impossibile normalizzare")
             return None, 0.0
 
-        feature_norms = np.linalg.norm(self.FeatureMatrix, axis=1, keepdims=True)
-        feature_norms[feature_norms == 0] = 1.0
-        FeatureMatrix_normalized = self.FeatureMatrix / feature_norms
-
+        # FeatureMatrix è già pre-normalizzata all'inizializzazione
         # Dot product su vettori normalizzati = cosine similarity
-        scores = np.dot(FeatureMatrix_normalized, target_embedding)
+        scores = np.dot(self.FeatureMatrix, target_embedding)
         
         best_index = np.argmax(scores)   
         max_score = scores[best_index]

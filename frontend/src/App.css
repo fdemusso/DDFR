@@ -95,7 +95,7 @@
     border: 2px solid rgba(0, 255, 136, 0.8); /* default: guest/known */
     box-shadow: 0 0 15px rgba(0, 255, 136, 0.4); /* Glow esterno */
     background: rgba(0, 255, 136, 0.05); /* Leggerissimo verde interno */
-    transition: all 0.1s linear; /* Movimento fluido */
+    transition: all 0.2s cubic-bezier(0.25, 0.1, 0.25, 1); /* Movimento fluido e reattivo */
     border-radius: 8px;
   }
 

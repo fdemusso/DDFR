@@ -4,24 +4,38 @@ from fastapi.middleware.cors import CORSMiddleware
 import logging
 import os
 from contextlib import asynccontextmanager
+from logging.handlers import QueueHandler, QueueListener
+from queue import Queue
 
 from config import database_settings as set, path_settings, api_settings
 from services import database
 
-# Configurazione logging prima degli import dei router
+# Configurazione logging asincrono per migliorare prestazioni
 os.makedirs(path_settings.logfolder, exist_ok=True)
 log_filename = os.path.join(path_settings.logfolder, "app.log")
 
 root_logger = logging.getLogger()
 if not root_logger.handlers:
-    logging.basicConfig(
-        level=logging.INFO,
-        format="%(asctime)s - %(levelname)s - %(name)s - %(message)s",
-        handlers=[
-            logging.FileHandler(log_filename),
-            logging.StreamHandler()
-        ]
-    )
+    # Crea queue per logging asincrono
+    log_queue = Queue(-1)  # Nessun limite di dimensione
+    
+    # Handler finali che scriveranno effettivamente i log
+    file_handler = logging.FileHandler(log_filename)
+    stream_handler = logging.StreamHandler()
+    
+    # Formattazione
+    formatter = logging.Formatter("%(asctime)s - %(levelname)s - %(name)s - %(message)s")
+    file_handler.setFormatter(formatter)
+    stream_handler.setFormatter(formatter)
+    
+    # QueueListener gestisce i log in background
+    queue_listener = QueueListener(log_queue, file_handler, stream_handler, respect_handler_level=True)
+    queue_listener.start()
+    
+    # Configura il root logger con QueueHandler
+    queue_handler = QueueHandler(log_queue)
+    root_logger.addHandler(queue_handler)
+    root_logger.setLevel(logging.INFO)
 
 logger = logging.getLogger(__name__)
 
@@ -71,12 +85,12 @@ if __name__ == "__main__":
             port=8000,
             ssl_keyfile=api_settings.keypath,
             ssl_certfile=api_settings.certpath,
-            reload=True
+            reload=False  # Disabilitato per ottimizzare prestazioni in produzione
         )
     else:
         uvicorn.run(
             "main:app",
-            host="127.0.0.1",
+            host="0.0.0.0",  # Ascolta su tutte le interfacce per accettare connessioni dalla rete
             port=8000,
-            reload=True
+            reload=False  # Disabilitato per ottimizzare prestazioni in produzione
         )

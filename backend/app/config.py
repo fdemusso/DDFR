@@ -1,6 +1,7 @@
 from pydantic_settings import BaseSettings
 import os
 from datetime import datetime
+from typing import Optional
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 # Vai alla directory backend (un livello sopra app/)
@@ -33,15 +34,19 @@ class PathSettings(BaseSettings):
         extra = "ignore"
 
 class APISettings(BaseSettings):
+    host: str = "192.168.1.69"
+    port: int = 8000
     app_name: str = "DDFR API"
     description: str = "API per il riconoscimento facciale e la gestione delle persone"
     app_version: str = "1.0.0"
     tollerance: float = 0.5
     debug: bool = False
-    keypath: str = "/Users/flaviodemusso/Desktop/DDFR/key.pem"
-    certpath: str = "/Users/flaviodemusso/Desktop/DDFR/cert.pem"
+    use_https: bool = False
+    keypath: Optional[str] = None
+    certpath: Optional[str] = None
 
     class Config:
+        env_prefix = "APP_"
         env_file = ENV_FILE_PATH
         env_file_encoding = 'utf-8'
         extra = "ignore"
