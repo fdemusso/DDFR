@@ -3,6 +3,7 @@ import sys
 import os
 import numpy as np
 import cv2
+from typing import Optional
 
 import insightface
 from insightface.app import FaceAnalysis
