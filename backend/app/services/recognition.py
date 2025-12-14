@@ -117,18 +117,17 @@ class FaceEngine:
 
         return {pic.hash : embedding_list}
     
-
     def identify(self, target_data, threshold=0.5):
         if self.FeatureMatrix is None:
             logger.warning("FeatureMatrix è None: database vuoto o non inizializzato")
             n_items = len(target_data) if isinstance(target_data, list) else 1
             return [(None, 0.0)] * n_items
 
-        try:
+        if isinstance(target_data, list) and len(target_data) > 0 and isinstance(target_data[0], np.ndarray):
+            input_matrix = np.stack(target_data)
+        else:
             input_matrix = np.array(target_data, dtype=np.float32)
-        except Exception as e:
-            logger.error(f"Errore conversione input: {e}")
-            return [(None, 0.0)]
+       
         
         if input_matrix.ndim == 1:
             input_matrix = input_matrix.reshape(1, -1)

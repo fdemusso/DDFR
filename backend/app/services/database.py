@@ -81,8 +81,6 @@ class Database():
 
         return cls.current_client
     
-
-
     @classmethod
     def close_connection(cls):
         if cls.current_client is not None:
@@ -190,8 +188,7 @@ class Database():
     @staticmethod
     def _rollback_user_slot(person: Person):
         if person.role == RoleType.USER:
-            Person.reset_user_slot()
-        
+            Person.reset_user_slot()      
     
     def remove_person(self, person_id: str) -> bool:
         collection = self.get_collection()
@@ -296,7 +293,6 @@ class Database():
 
         return success_count
         
-
     def get_all_encodings(self):
         people = self.get_all_people()
         

@@ -1,8 +1,15 @@
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
+import os
 import cv2
+# Limitiamo i problemi che può causare il Multithreading a numpy
+os.environ["OMP_NUM_THREADS"] = "1"
+os.environ["OPENBLAS_NUM_THREADS"] = "1"
+os.environ["MKL_NUM_THREADS"] = "1"
+os.environ["VECLIB_MAXIMUM_THREADS"] = "1"
+os.environ["NUMEXPR_NUM_THREADS"] = "1"
 import numpy as np
 import logging
-import os
+
 import asyncio
 from concurrent.futures import ThreadPoolExecutor
 
@@ -30,7 +37,7 @@ if engine.FeatureMatrix is None:
 
 executor = ThreadPoolExecutor(max_workers=1) #Riceviamo solo un frame per volta
 
-def process_image_sync(image_bytes):
+def process_image_sync(image_bytes): #TODO: spostare in img.py
     try:
         np_arr = np.frombuffer(image_bytes, np.uint8)
         frame = cv2.imdecode(np_arr, cv2.IMREAD_COLOR)

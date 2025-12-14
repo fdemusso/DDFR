@@ -53,3 +53,4 @@ const WebcamView = ({ webcamRef, isFrontCamera, onCameraReady, isFullscreen, onR
 
 export default React.memo(WebcamView);
 
+

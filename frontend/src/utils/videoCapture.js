@@ -65,3 +65,4 @@ export const captureAndSend = (video, ws, canvasRef) => {
   return true;
 };
 
+
