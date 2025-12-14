@@ -5,10 +5,10 @@ on:
     branches:
       - main
     paths:
-      - 'docs/**'
-      - 'mkdocs.yml'
-      - '.github/workflows/docs.yml'
-      - 'requirements/docs.txt'
+      - 'docs/**'             # Monitora modifiche ai file markdown
+      - 'mkdocs.yml'          # Monitora modifiche alla config
+      - '.github/workflows/**' # Monitora modifiche al workflow stesso
+      - 'requirements/docs.txt' # Monitora le dipendenze
   workflow_dispatch:
 
 permissions:
@@ -28,19 +28,22 @@ jobs:
           python-version: '3.11'
       
       - name: Install dependencies
+        # Qui usa il percorso relativo alla root: requirements/docs.txt
         run: |
           pip install -r requirements/docs.txt
       
       - name: Build documentation
+        # Essendo mkdocs.yml nella root, non serve specificare -f
         run: mkdocs build
       
       - name: Add .nojekyll file
+        # Il sito viene generato nella cartella 'site' nella root
         run: touch site/.nojekyll
       
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
+          # La cartella da pubblicare è 'site' (nella root)
           publish_dir: ./site
           cname: false
-

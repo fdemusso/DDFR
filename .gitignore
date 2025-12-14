@@ -11,6 +11,9 @@ cert.pem
 key.pem
 *.pem
 
+# ignora file della documentazione compilati
+site/
+
 # Ignore image files
 *.png
 *.jpg
