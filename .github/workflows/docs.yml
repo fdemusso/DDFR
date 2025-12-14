@@ -8,10 +8,13 @@ on:
       - 'docs/**'
       - 'mkdocs.yml'
       - '.github/workflows/docs.yml'
+      - 'requirements/docs.txt'
   workflow_dispatch:
 
 permissions:
   contents: write
+  pages: write
+  id-token: write
 
 jobs:
   deploy:
@@ -31,9 +34,13 @@ jobs:
       - name: Build documentation
         run: mkdocs build
       
+      - name: Add .nojekyll file
+        run: touch site/.nojekyll
+      
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./site
+          cname: false
 
