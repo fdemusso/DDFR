@@ -85,9 +85,13 @@ REACT_APP_WS_PROTOCOL=wss
 
 *Note: Ensure your SSL certificates are generated and placed correctly to allow the browser to trust the local camera stream.*
 
-##UsageOnce the environment is prepared, the system must be awakened manually. The architecture requires the simultaneous operation of the brain (backend) and the eyes (frontend).
+## Usage
 
-###Awakening the System1. **Start the Database:** Ensure your MongoDB instance is running locally.
+Once the environment is prepared, the system must be awakened manually. The architecture requires the simultaneous operation of the brain (backend) and the eyes (frontend).
+
+### Awakening the System
+
+1. **Start the Database:** Ensure your MongoDB instance is running locally.
 2. **Start the Brain:** In your terminal, navigate to the backend directory and launch the secure server:
 ```bash
 python main.py https
@@ -101,11 +105,15 @@ npm start
 
 
 
-###The ExperienceUpon launching, the browser will request permission to access the webcam. This is the moment the system begins to observe. Currently, the recognition data—the faces of relatives and friends—must be manually curated in the database (admin phase).
+### The Experience
+
+Upon launching, the browser will request permission to access the webcam. This is the moment the system begins to observe. Currently, the recognition data—the faces of relatives and friends—must be manually curated in the database (admin phase).
 
 When a known face appears before the camera, DDFR processes the biometric data and provides immediate text-based feedback on the screen, identifying the person. This text is the precursor to the upcoming "human-like" text-to-speech engine.
 
-##ContributingWe are currently in the phase of solidifying the foundation. The core logic for recognition is complete, and we are not looking for new feature implementations at this moment.
+## Contributing
+
+We are currently in the phase of solidifying the foundation. The core logic for recognition is complete, and we are not looking for new feature implementations at this moment.
 
 Our primary need is for **Testers** and **Code Reviewers**.
 
@@ -114,4 +122,6 @@ Our primary need is for **Testers** and **Code Reviewers**.
 
 If you wish to help polish this digital companion, please verify the code structure and report any inconsistencies.
 
-##LicenseDistributed under the *GPLv3* license. See `LICENSE` for more information.
+## License
+
+Distributed under the *GPLv3* license. See `LICENSE` for more information.

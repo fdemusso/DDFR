@@ -6,3 +6,4 @@ Face detection and recognition engine using InsightFace and FAISS.
 
 ::: app.services.recognition.FaceEngine
 
+
