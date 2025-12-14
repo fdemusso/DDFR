@@ -1,0 +1,2371 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Official documentation for DDFR backend API">
+      
+      
+        <meta name="author" content="DDFR Team">
+      
+      
+      
+        <link rel="prev" href="../..">
+      
+      
+        <link rel="next" href="../../api/routes/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.0">
+    
+    
+      
+        <title>Configuration - DDFR Backend Documentation</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.618322db.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/_mkdocstrings.css">
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="blue" data-md-color-accent="blue">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#configuration" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="DDFR Backend Documentation" class="md-header__button md-logo" aria-label="DDFR Backend Documentation" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            DDFR Backend Documentation
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Configuration
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="blue" data-md-color-accent="blue"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="blue" data-md-color-accent="blue"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/fdemusso/DDFR" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    DDFR
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+            
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../.." class="md-tabs__link">
+        
+  
+  
+    
+  
+  Home
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    
+    
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="./" class="md-tabs__link">
+          
+  
+  
+  Configuration
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../api/routes/" class="md-tabs__link">
+          
+  
+  
+  API
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../services/database/" class="md-tabs__link">
+          
+  
+  
+  Services
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../models/person/" class="md-tabs__link">
+          
+  
+  
+  Models
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../utils/constants/" class="md-tabs__link">
+          
+  
+  
+  Utils
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../scripts/insertdata/" class="md-tabs__link">
+          
+  
+  
+  Scripts
+
+        </a>
+      </li>
+    
+  
+
+      
+    </ul>
+  </div>
+</nav>
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="DDFR Backend Documentation" class="md-nav__button md-logo" aria-label="DDFR Backend Documentation" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    DDFR Backend Documentation
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/fdemusso/DDFR" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    DDFR
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Configuration
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Configuration
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Configuration
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Configuration
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#environment-variables-env" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Environment Variables (.env)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Environment Variables (.env)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#configuration-file-structure" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Configuration File Structure
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#variable-descriptions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Variable Descriptions
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Variable Descriptions">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#database-settings-prefix-db_" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Database Settings (Prefix: DB_)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#logging-settings-prefix-log_" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Logging Settings (Prefix: LOG_)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#api-settings-prefix-app_" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        API Settings (Prefix: APP_)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#creating-ssl-certificates" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Creating SSL Certificates
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Creating SSL Certificates">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#using-mkcert-recommended-for-development" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Using mkcert (Recommended for Development)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#using-openssl-manual" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Using OpenSSL (Manual)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#production-certificates" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Production Certificates
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#additional-resources" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Additional Resources
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#configuration-classes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Configuration Classes
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#databasesettings" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        DatabaseSettings
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#app.config.DatabaseSettings" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        DatabaseSettings
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#pathsettings" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        PathSettings
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#app.config.PathSettings" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        PathSettings
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#apisettings" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        APISettings
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#app.config.APISettings" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        APISettings
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    API
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    API
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/routes/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Routes
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/websocket/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    WebSocket
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Services
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Services
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../services/database/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Database
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../services/recognition/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Recognition
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Models
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Models
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../models/person/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Person
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Utils
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Utils
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../utils/constants/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Constants
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../utils/img/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Image Validation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_7" >
+        
+          
+          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Scripts
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Scripts
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../scripts/insertdata/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Insert Data
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#environment-variables-env" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Environment Variables (.env)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Environment Variables (.env)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#configuration-file-structure" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Configuration File Structure
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#variable-descriptions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Variable Descriptions
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Variable Descriptions">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#database-settings-prefix-db_" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Database Settings (Prefix: DB_)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#logging-settings-prefix-log_" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Logging Settings (Prefix: LOG_)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#api-settings-prefix-app_" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        API Settings (Prefix: APP_)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#creating-ssl-certificates" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Creating SSL Certificates
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Creating SSL Certificates">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#using-mkcert-recommended-for-development" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Using mkcert (Recommended for Development)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#using-openssl-manual" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Using OpenSSL (Manual)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#production-certificates" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Production Certificates
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#additional-resources" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Additional Resources
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#configuration-classes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Configuration Classes
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#databasesettings" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        DatabaseSettings
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#app.config.DatabaseSettings" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        DatabaseSettings
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#pathsettings" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        PathSettings
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#app.config.PathSettings" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        PathSettings
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#apisettings" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        APISettings
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#app.config.APISettings" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        APISettings
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="configuration">Configuration</h1>
+<p>Configuration module for application settings.</p>
+<h2 id="environment-variables-env">Environment Variables (.env)</h2>
+<p>The application configuration is managed through environment variables loaded from a <code>.env</code> file located in the <code>backend/app/</code> directory.</p>
+<h3 id="configuration-file-structure">Configuration File Structure</h3>
+<p>Create a <code>.env</code> file in <code>backend/app/</code> with the following structure:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a># --- Database Section (Prefix: DB_) ---
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>DB_URL=mongodb://localhost:27017/
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>DB_NAME=ddfr_db
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>DB_COLLECTION=people
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>DB_HASH=&quot;300a31fbdc6f3ff4fb27625c2ed49fdc&quot;
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>
+<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a># --- Logging Section (Prefix: LOG_) ---
+<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>LOG_LOGFOLDER=logs
+<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>
+<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a># --- API Section (Prefix: APP_) ---
+<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>APP_NAME=DDFR API
+<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>APP_VERSION=1.0.0
+<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>APP_DESCRIPTION=API for face recognition and person management
+<a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>APP_TOLLERANCE=0.5
+<a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a>APP_DEBUG=false
+<a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a>APP_HOST=0.0.0.0
+<a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a>APP_PORT=8000
+<a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a>APP_USE_HTTPS=false
+<a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a>APP_KEYPATH=
+<a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a>APP_CERTPATH=
+</code></pre></div>
+<h3 id="variable-descriptions">Variable Descriptions</h3>
+<h4 id="database-settings-prefix-db_">Database Settings (Prefix: <code>DB_</code>)</h4>
+<ul>
+<li><strong><code>DB_URL</code></strong> (string): MongoDB connection URL. </li>
+<li>Default: <code>"mongodb://localhost:27017/"</code></li>
+<li>
+<p>Example: <code>"mongodb+srv://user:password@cluster.mongodb.net/"</code></p>
+</li>
+<li>
+<p><strong><code>DB_NAME</code></strong> (string): Database name.</p>
+</li>
+<li>
+<p>Default: <code>"ddfr_db"</code></p>
+</li>
+<li>
+<p><strong><code>DB_COLLECTION</code></strong> (string): MongoDB collection name for storing person data.</p>
+</li>
+<li>
+<p>Default: <code>"people"</code></p>
+</li>
+<li>
+<p><strong><code>DB_HASH</code></strong> (string): Legacy hash value (currently not actively used, kept for backward compatibility).</p>
+</li>
+<li>Value: <code>"300a31fbdc6f3ff4fb27625c2ed49fdc"</code></li>
+</ul>
+<h4 id="logging-settings-prefix-log_">Logging Settings (Prefix: <code>LOG_</code>)</h4>
+<ul>
+<li><strong><code>LOG_LOGFOLDER</code></strong> (string): Directory path for log files. If not specified, defaults to <code>logs-{timestamp}</code> in the backend directory.</li>
+<li>Example: <code>"logs"</code> or <code>"C:/logs/ddfr"</code></li>
+</ul>
+<h4 id="api-settings-prefix-app_">API Settings (Prefix: <code>APP_</code>)</h4>
+<ul>
+<li><strong><code>APP_NAME</code></strong> (string): Application name displayed in API documentation.</li>
+<li>
+<p>Default: <code>"DDFR API"</code></p>
+</li>
+<li>
+<p><strong><code>APP_VERSION</code></strong> (string): Application version.</p>
+</li>
+<li>
+<p>Default: <code>"1.0.0"</code></p>
+</li>
+<li>
+<p><strong><code>APP_DESCRIPTION</code></strong> (string): Application description displayed in API documentation.</p>
+</li>
+<li>
+<p>Default: <code>"API for face recognition and person management"</code></p>
+</li>
+<li>
+<p><strong><code>APP_TOLLERANCE</code></strong> (float): Face recognition similarity threshold (0.0-1.0). Lower values are more strict.</p>
+</li>
+<li>Default: <code>0.5</code></li>
+<li>Recommended range: <code>0.4-0.6</code></li>
+<li>
+<p><strong>⚠️ Deprecated</strong>: This setting is being phased out and used less frequently. Consider using hardcoded thresholds in the recognition service instead.</p>
+</li>
+<li>
+<p><strong><code>APP_DEBUG</code></strong> (boolean): Enable debug mode. When enabled, provides more verbose logging.</p>
+</li>
+<li>Default: <code>false</code></li>
+<li>
+<p>Values: <code>true</code> or <code>false</code></p>
+</li>
+<li>
+<p><strong><code>APP_HOST</code></strong> (string): Server host address to bind to.</p>
+</li>
+<li>Default: <code>"0.0.0.0"</code> (listens on all interfaces)</li>
+<li>
+<p>For localhost only: <code>"127.0.0.1"</code></p>
+</li>
+<li>
+<p><strong><code>APP_PORT</code></strong> (integer): Server port number.</p>
+</li>
+<li>
+<p>Default: <code>8000</code></p>
+</li>
+<li>
+<p><strong><code>APP_USE_HTTPS</code></strong> (boolean): Enable HTTPS support.</p>
+</li>
+<li>Default: <code>false</code></li>
+<li>
+<p>Values: <code>true</code> or <code>false</code></p>
+</li>
+<li>
+<p><strong><code>APP_KEYPATH</code></strong> (string, optional): Path to SSL private key file (required if <code>APP_USE_HTTPS=true</code>).</p>
+</li>
+<li>Default: <code>None</code> (empty)</li>
+<li>
+<p>Example: <code>"C:/path/to/key.pem"</code> (Windows) or <code>"/path/to/key.pem"</code> (Mac/Linux)</p>
+</li>
+<li>
+<p><strong><code>APP_CERTPATH</code></strong> (string, optional): Path to SSL certificate file (required if <code>APP_USE_HTTPS=true</code>).</p>
+</li>
+<li>Default: <code>None</code> (empty)</li>
+<li>Example: <code>"C:/path/to/cert.pem"</code> (Windows) or <code>"/path/to/cert.pem"</code> (Mac/Linux)</li>
+</ul>
+<h3 id="creating-ssl-certificates">Creating SSL Certificates</h3>
+<p>To enable HTTPS, you need to generate SSL certificates. Here are some common approaches:</p>
+<h4 id="using-mkcert-recommended-for-development">Using mkcert (Recommended for Development)</h4>
+<p><a href="https://github.com/FiloSottile/mkcert">mkcert</a> is a simple tool for making locally-trusted development certificates:</p>
+<ol>
+<li><strong>Install mkcert</strong>:</li>
+<li>Windows: <code>choco install mkcert</code> or download from <a href="https://github.com/FiloSottile/mkcert/releases">GitHub releases</a></li>
+<li>macOS: <code>brew install mkcert</code></li>
+<li>
+<p>Linux: See <a href="https://github.com/FiloSottile/mkcert#linux">installation instructions</a></p>
+</li>
+<li>
+<p><strong>Install the local CA</strong>:
+   <div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>mkcert<span class="w"> </span>-install
+</code></pre></div></p>
+</li>
+<li>
+<p><strong>Generate certificate for your domain</strong>:
+   <div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>mkcert<span class="w"> </span>ddfr.local<span class="w"> </span>localhost<span class="w"> </span><span class="m">127</span>.0.0.1<span class="w"> </span>::1
+</code></pre></div>
+   This creates <code>ddfr.local+2.pem</code> (certificate) and <code>ddfr.local+2-key.pem</code> (private key)</p>
+</li>
+<li>
+<p><strong>Update your .env file</strong>:
+   <div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>APP_USE_HTTPS=true
+<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>APP_KEYPATH=/path/to/ddfr.local+2-key.pem
+<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>APP_CERTPATH=/path/to/ddfr.local+2.pem
+</code></pre></div></p>
+</li>
+</ol>
+<h4 id="using-openssl-manual">Using OpenSSL (Manual)</h4>
+<p>For manual certificate generation using OpenSSL:</p>
+<ol>
+<li>
+<p><strong>Generate a private key</strong>:
+   <div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>openssl<span class="w"> </span>genrsa<span class="w"> </span>-out<span class="w"> </span>key.pem<span class="w"> </span><span class="m">2048</span>
+</code></pre></div></p>
+</li>
+<li>
+<p><strong>Create a certificate signing request (CSR)</strong>:
+   <div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>openssl<span class="w"> </span>req<span class="w"> </span>-new<span class="w"> </span>-key<span class="w"> </span>key.pem<span class="w"> </span>-out<span class="w"> </span>csr.pem
+</code></pre></div></p>
+</li>
+<li>
+<p><strong>Generate a self-signed certificate</strong>:
+   <div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>openssl<span class="w"> </span>x509<span class="w"> </span>-req<span class="w"> </span>-days<span class="w"> </span><span class="m">365</span><span class="w"> </span>-in<span class="w"> </span>csr.pem<span class="w"> </span>-signkey<span class="w"> </span>key.pem<span class="w"> </span>-out<span class="w"> </span>cert.pem
+</code></pre></div></p>
+</li>
+</ol>
+<p><strong>Note</strong>: Self-signed certificates will show security warnings in browsers. For production, use certificates from a trusted Certificate Authority (CA).</p>
+<h4 id="production-certificates">Production Certificates</h4>
+<p>For production environments, consider:
+- <strong>Let's Encrypt</strong>: Free, automated SSL certificates - <a href="https://letsencrypt.org/">https://letsencrypt.org/</a>
+- <strong>Cloudflare</strong>: Provides free SSL certificates for proxied domains
+- <strong>Commercial CAs</strong>: Various providers offer SSL certificates (DigiCert, GlobalSign, etc.)</p>
+<h4 id="additional-resources">Additional Resources</h4>
+<ul>
+<li><a href="https://github.com/FiloSottile/mkcert">mkcert Documentation</a></li>
+<li><a href="https://www.openssl.org/docs/manpages.html">OpenSSL Certificate Authority</a></li>
+<li><a href="https://fastapi.tiangolo.com/deployment/https/">FastAPI HTTPS Documentation</a></li>
+</ul>
+<h3 id="configuration-classes">Configuration Classes</h3>
+<h2 id="databasesettings">DatabaseSettings</h2>
+
+
+<div class="doc doc-object doc-class">
+
+
+
+<h2 id="app.config.DatabaseSettings" class="doc doc-heading">
+            <span class="doc doc-object-name doc-class-name">app.config.DatabaseSettings</span>
+
+
+</h2>
+
+
+    <div class="doc doc-contents first">
+            <p class="doc doc-class-bases">
+              Bases: <code><span title="pydantic_settings.BaseSettings">BaseSettings</span></code></p>
+
+
+
+        <p>Database connection configuration settings for MongoDB.</p>
+<p>Loads settings from .env file using the "DB_" prefix.
+All environment variables must be prefixed with DB_ to be recognized.</p>
+
+
+<p><span class="doc-section-title">Attributes:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td><code><span title="app.config.DatabaseSettings.url">url</span></code></td>
+            <td>
+                  <code><span title="str">str</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>MongoDB connection URL. Default: "mongodb://localhost:27017/".</p>
+              </div>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code><span title="app.config.DatabaseSettings.name">name</span></code></td>
+            <td>
+                  <code><span title="str">str</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Database name. Default: "ddfr_db".</p>
+              </div>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code><span title="app.config.DatabaseSettings.collection">collection</span></code></td>
+            <td>
+                  <code><span title="str">str</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>MongoDB collection name. Default: "people".</p>
+              </div>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code><span title="app.config.DatabaseSettings.hash">hash</span></code></td>
+            <td>
+                  <code><span title="str">str</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Hash for data security. Required, no default value.</p>
+              </div>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+
+
+
+
+
+
+              <details class="mkdocstrings-source">
+                <summary>Source code in <code>backend/app/config.py</code></summary>
+                <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-14">14</a></span>
+<span class="normal"><a href="#__codelineno-0-15">15</a></span>
+<span class="normal"><a href="#__codelineno-0-16">16</a></span>
+<span class="normal"><a href="#__codelineno-0-17">17</a></span>
+<span class="normal"><a href="#__codelineno-0-18">18</a></span>
+<span class="normal"><a href="#__codelineno-0-19">19</a></span>
+<span class="normal"><a href="#__codelineno-0-20">20</a></span>
+<span class="normal"><a href="#__codelineno-0-21">21</a></span>
+<span class="normal"><a href="#__codelineno-0-22">22</a></span>
+<span class="normal"><a href="#__codelineno-0-23">23</a></span>
+<span class="normal"><a href="#__codelineno-0-24">24</a></span>
+<span class="normal"><a href="#__codelineno-0-25">25</a></span>
+<span class="normal"><a href="#__codelineno-0-26">26</a></span>
+<span class="normal"><a href="#__codelineno-0-27">27</a></span>
+<span class="normal"><a href="#__codelineno-0-28">28</a></span>
+<span class="normal"><a href="#__codelineno-0-29">29</a></span>
+<span class="normal"><a href="#__codelineno-0-30">30</a></span>
+<span class="normal"><a href="#__codelineno-0-31">31</a></span>
+<span class="normal"><a href="#__codelineno-0-32">32</a></span>
+<span class="normal"><a href="#__codelineno-0-33">33</a></span>
+<span class="normal"><a href="#__codelineno-0-34">34</a></span>
+<span class="normal"><a href="#__codelineno-0-35">35</a></span>
+<span class="normal"><a href="#__codelineno-0-36">36</a></span>
+<span class="normal"><a href="#__codelineno-0-37">37</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-14" name="__codelineno-0-14"></a><span class="k">class</span><span class="w"> </span><span class="nc">DatabaseSettings</span><span class="p">(</span><span class="n">BaseSettings</span><span class="p">):</span>
+<a id="__codelineno-0-15" name="__codelineno-0-15"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Database connection configuration settings for MongoDB.</span>
+<a id="__codelineno-0-16" name="__codelineno-0-16"></a>
+<a id="__codelineno-0-17" name="__codelineno-0-17"></a><span class="sd">    Loads settings from .env file using the &quot;DB_&quot; prefix.</span>
+<a id="__codelineno-0-18" name="__codelineno-0-18"></a><span class="sd">    All environment variables must be prefixed with DB_ to be recognized.</span>
+<a id="__codelineno-0-19" name="__codelineno-0-19"></a>
+<a id="__codelineno-0-20" name="__codelineno-0-20"></a><span class="sd">    Attributes:</span>
+<a id="__codelineno-0-21" name="__codelineno-0-21"></a><span class="sd">        url (str): MongoDB connection URL. Default: &quot;mongodb://localhost:27017/&quot;.</span>
+<a id="__codelineno-0-22" name="__codelineno-0-22"></a><span class="sd">        name (str): Database name. Default: &quot;ddfr_db&quot;.</span>
+<a id="__codelineno-0-23" name="__codelineno-0-23"></a><span class="sd">        collection (str): MongoDB collection name. Default: &quot;people&quot;.</span>
+<a id="__codelineno-0-24" name="__codelineno-0-24"></a><span class="sd">        hash (str): Hash for data security. Required, no default value.</span>
+<a id="__codelineno-0-25" name="__codelineno-0-25"></a>
+<a id="__codelineno-0-26" name="__codelineno-0-26"></a><span class="sd">    &quot;&quot;&quot;</span>
+<a id="__codelineno-0-27" name="__codelineno-0-27"></a>
+<a id="__codelineno-0-28" name="__codelineno-0-28"></a>    <span class="n">url</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;mongodb://localhost:27017/&quot;</span>
+<a id="__codelineno-0-29" name="__codelineno-0-29"></a>    <span class="n">name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;ddfr_db&quot;</span>
+<a id="__codelineno-0-30" name="__codelineno-0-30"></a>    <span class="n">collection</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;people&quot;</span>
+<a id="__codelineno-0-31" name="__codelineno-0-31"></a>    <span class="nb">hash</span><span class="p">:</span> <span class="nb">str</span> 
+<a id="__codelineno-0-32" name="__codelineno-0-32"></a>
+<a id="__codelineno-0-33" name="__codelineno-0-33"></a>    <span class="k">class</span><span class="w"> </span><span class="nc">Config</span><span class="p">:</span>
+<a id="__codelineno-0-34" name="__codelineno-0-34"></a>        <span class="n">env_prefix</span> <span class="o">=</span> <span class="s2">&quot;DB_&quot;</span>
+<a id="__codelineno-0-35" name="__codelineno-0-35"></a>        <span class="n">env_file</span> <span class="o">=</span> <span class="n">ENV_FILE_PATH</span>
+<a id="__codelineno-0-36" name="__codelineno-0-36"></a>        <span class="n">env_file_encoding</span> <span class="o">=</span> <span class="s1">&#39;utf-8&#39;</span>
+<a id="__codelineno-0-37" name="__codelineno-0-37"></a>        <span class="n">extra</span> <span class="o">=</span> <span class="s2">&quot;ignore&quot;</span>
+</code></pre></div></td></tr></table></div>
+              </details>
+
+
+
+<div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+
+
+
+  </div>
+
+    </div>
+
+</div><h2 id="pathsettings">PathSettings</h2>
+
+
+<div class="doc doc-object doc-class">
+
+
+
+<h2 id="app.config.PathSettings" class="doc doc-heading">
+            <span class="doc doc-object-name doc-class-name">app.config.PathSettings</span>
+
+
+</h2>
+
+
+    <div class="doc doc-contents first">
+            <p class="doc doc-class-bases">
+              Bases: <code><span title="pydantic_settings.BaseSettings">BaseSettings</span></code></p>
+
+
+
+        <p>File system path configuration settings.</p>
+<p>Loads settings from .env file using the "LOG_" prefix.
+All environment variables must be prefixed with LOG_ to be recognized.</p>
+
+
+<p><span class="doc-section-title">Attributes:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td><code><span title="app.config.PathSettings.logfolder">logfolder</span></code></td>
+            <td>
+                  <code><span title="str">str</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Directory path for log files. Default: "logs-{timestamp}" in backend directory.</p>
+              </div>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code><span title="app.config.PathSettings.imgsfolder">imgsfolder</span></code></td>
+            <td>
+                  <code><span title="str">str</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Directory path for image storage. Default: "img" in app directory.</p>
+              </div>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+
+
+
+
+
+
+              <details class="mkdocstrings-source">
+                <summary>Source code in <code>backend/app/config.py</code></summary>
+                <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-39">39</a></span>
+<span class="normal"><a href="#__codelineno-0-40">40</a></span>
+<span class="normal"><a href="#__codelineno-0-41">41</a></span>
+<span class="normal"><a href="#__codelineno-0-42">42</a></span>
+<span class="normal"><a href="#__codelineno-0-43">43</a></span>
+<span class="normal"><a href="#__codelineno-0-44">44</a></span>
+<span class="normal"><a href="#__codelineno-0-45">45</a></span>
+<span class="normal"><a href="#__codelineno-0-46">46</a></span>
+<span class="normal"><a href="#__codelineno-0-47">47</a></span>
+<span class="normal"><a href="#__codelineno-0-48">48</a></span>
+<span class="normal"><a href="#__codelineno-0-49">49</a></span>
+<span class="normal"><a href="#__codelineno-0-50">50</a></span>
+<span class="normal"><a href="#__codelineno-0-51">51</a></span>
+<span class="normal"><a href="#__codelineno-0-52">52</a></span>
+<span class="normal"><a href="#__codelineno-0-53">53</a></span>
+<span class="normal"><a href="#__codelineno-0-54">54</a></span>
+<span class="normal"><a href="#__codelineno-0-55">55</a></span>
+<span class="normal"><a href="#__codelineno-0-56">56</a></span>
+<span class="normal"><a href="#__codelineno-0-57">57</a></span>
+<span class="normal"><a href="#__codelineno-0-58">58</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-39" name="__codelineno-0-39"></a><span class="k">class</span><span class="w"> </span><span class="nc">PathSettings</span><span class="p">(</span><span class="n">BaseSettings</span><span class="p">):</span>
+<a id="__codelineno-0-40" name="__codelineno-0-40"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;File system path configuration settings.</span>
+<a id="__codelineno-0-41" name="__codelineno-0-41"></a>
+<a id="__codelineno-0-42" name="__codelineno-0-42"></a><span class="sd">    Loads settings from .env file using the &quot;LOG_&quot; prefix.</span>
+<a id="__codelineno-0-43" name="__codelineno-0-43"></a><span class="sd">    All environment variables must be prefixed with LOG_ to be recognized.</span>
+<a id="__codelineno-0-44" name="__codelineno-0-44"></a>
+<a id="__codelineno-0-45" name="__codelineno-0-45"></a><span class="sd">    Attributes:</span>
+<a id="__codelineno-0-46" name="__codelineno-0-46"></a><span class="sd">        logfolder (str): Directory path for log files. Default: &quot;logs-{timestamp}&quot; in backend directory.</span>
+<a id="__codelineno-0-47" name="__codelineno-0-47"></a><span class="sd">        imgsfolder (str): Directory path for image storage. Default: &quot;img&quot; in app directory.</span>
+<a id="__codelineno-0-48" name="__codelineno-0-48"></a>
+<a id="__codelineno-0-49" name="__codelineno-0-49"></a><span class="sd">    &quot;&quot;&quot;</span>
+<a id="__codelineno-0-50" name="__codelineno-0-50"></a>
+<a id="__codelineno-0-51" name="__codelineno-0-51"></a>    <span class="n">logfolder</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">BACKEND_DIR</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;logs-</span><span class="si">{</span><span class="n">_STARTUP_TIMESTAMP</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<a id="__codelineno-0-52" name="__codelineno-0-52"></a>    <span class="n">imgsfolder</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">BASE_DIR</span><span class="p">,</span> <span class="s2">&quot;img&quot;</span><span class="p">)</span>
+<a id="__codelineno-0-53" name="__codelineno-0-53"></a>
+<a id="__codelineno-0-54" name="__codelineno-0-54"></a>    <span class="k">class</span><span class="w"> </span><span class="nc">Config</span><span class="p">:</span>
+<a id="__codelineno-0-55" name="__codelineno-0-55"></a>        <span class="n">env_prefix</span> <span class="o">=</span> <span class="s2">&quot;LOG_&quot;</span>
+<a id="__codelineno-0-56" name="__codelineno-0-56"></a>        <span class="n">env_file</span> <span class="o">=</span> <span class="n">ENV_FILE_PATH</span>
+<a id="__codelineno-0-57" name="__codelineno-0-57"></a>        <span class="n">env_file_encoding</span> <span class="o">=</span> <span class="s1">&#39;utf-8&#39;</span>
+<a id="__codelineno-0-58" name="__codelineno-0-58"></a>        <span class="n">extra</span> <span class="o">=</span> <span class="s2">&quot;ignore&quot;</span>
+</code></pre></div></td></tr></table></div>
+              </details>
+
+
+
+<div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+
+
+
+  </div>
+
+    </div>
+
+</div><h2 id="apisettings">APISettings</h2>
+
+
+<div class="doc doc-object doc-class">
+
+
+
+<h2 id="app.config.APISettings" class="doc doc-heading">
+            <span class="doc doc-object-name doc-class-name">app.config.APISettings</span>
+
+
+</h2>
+
+
+    <div class="doc doc-contents first">
+            <p class="doc doc-class-bases">
+              Bases: <code><span title="pydantic_settings.BaseSettings">BaseSettings</span></code></p>
+
+
+
+        <p>API application configuration settings.</p>
+<p>Loads settings from .env file using the "APP_" prefix.
+All environment variables must be prefixed with APP_ to be recognized.</p>
+
+
+<p><span class="doc-section-title">Attributes:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td><code><span title="app.config.APISettings.host">host</span></code></td>
+            <td>
+                  <code><span title="str">str</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>API server host address. Default: "192.168.1.69".</p>
+              </div>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code><span title="app.config.APISettings.port">port</span></code></td>
+            <td>
+                  <code><span title="int">int</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>API server port number. Default: 8000.</p>
+              </div>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code><span title="app.config.APISettings.app_name">app_name</span></code></td>
+            <td>
+                  <code><span title="str">str</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Application name. Default: "DDFR API".</p>
+              </div>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code><span title="app.config.APISettings.description">description</span></code></td>
+            <td>
+                  <code><span title="str">str</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>API description. Default: "API per il riconoscimento facciale e la gestione delle persone".</p>
+              </div>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code><span title="app.config.APISettings.app_version">app_version</span></code></td>
+            <td>
+                  <code><span title="str">str</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Application version. Default: "1.0.0".</p>
+              </div>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code><span title="app.config.APISettings.tollerance">tollerance</span></code></td>
+            <td>
+                  <code><span title="float">float</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Face recognition tolerance threshold. Default: 0.5.</p>
+              </div>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code><span title="app.config.APISettings.debug">debug</span></code></td>
+            <td>
+                  <code><span title="bool">bool</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Enable debug mode. Default: False.</p>
+              </div>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code><span title="app.config.APISettings.use_https">use_https</span></code></td>
+            <td>
+                  <code><span title="bool">bool</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Enable HTTPS. Default: False.</p>
+              </div>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code><span title="app.config.APISettings.keypath">keypath</span></code></td>
+            <td>
+                  <code><span title="typing.Optional">Optional</span>[<span title="str">str</span>]</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Path to SSL private key file. Default: None.</p>
+              </div>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code><span title="app.config.APISettings.certpath">certpath</span></code></td>
+            <td>
+                  <code><span title="typing.Optional">Optional</span>[<span title="str">str</span>]</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Path to SSL certificate file. Default: None.</p>
+              </div>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+
+
+
+
+
+
+              <details class="mkdocstrings-source">
+                <summary>Source code in <code>backend/app/config.py</code></summary>
+                <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-60">60</a></span>
+<span class="normal"><a href="#__codelineno-0-61">61</a></span>
+<span class="normal"><a href="#__codelineno-0-62">62</a></span>
+<span class="normal"><a href="#__codelineno-0-63">63</a></span>
+<span class="normal"><a href="#__codelineno-0-64">64</a></span>
+<span class="normal"><a href="#__codelineno-0-65">65</a></span>
+<span class="normal"><a href="#__codelineno-0-66">66</a></span>
+<span class="normal"><a href="#__codelineno-0-67">67</a></span>
+<span class="normal"><a href="#__codelineno-0-68">68</a></span>
+<span class="normal"><a href="#__codelineno-0-69">69</a></span>
+<span class="normal"><a href="#__codelineno-0-70">70</a></span>
+<span class="normal"><a href="#__codelineno-0-71">71</a></span>
+<span class="normal"><a href="#__codelineno-0-72">72</a></span>
+<span class="normal"><a href="#__codelineno-0-73">73</a></span>
+<span class="normal"><a href="#__codelineno-0-74">74</a></span>
+<span class="normal"><a href="#__codelineno-0-75">75</a></span>
+<span class="normal"><a href="#__codelineno-0-76">76</a></span>
+<span class="normal"><a href="#__codelineno-0-77">77</a></span>
+<span class="normal"><a href="#__codelineno-0-78">78</a></span>
+<span class="normal"><a href="#__codelineno-0-79">79</a></span>
+<span class="normal"><a href="#__codelineno-0-80">80</a></span>
+<span class="normal"><a href="#__codelineno-0-81">81</a></span>
+<span class="normal"><a href="#__codelineno-0-82">82</a></span>
+<span class="normal"><a href="#__codelineno-0-83">83</a></span>
+<span class="normal"><a href="#__codelineno-0-84">84</a></span>
+<span class="normal"><a href="#__codelineno-0-85">85</a></span>
+<span class="normal"><a href="#__codelineno-0-86">86</a></span>
+<span class="normal"><a href="#__codelineno-0-87">87</a></span>
+<span class="normal"><a href="#__codelineno-0-88">88</a></span>
+<span class="normal"><a href="#__codelineno-0-89">89</a></span>
+<span class="normal"><a href="#__codelineno-0-90">90</a></span>
+<span class="normal"><a href="#__codelineno-0-91">91</a></span>
+<span class="normal"><a href="#__codelineno-0-92">92</a></span>
+<span class="normal"><a href="#__codelineno-0-93">93</a></span>
+<span class="normal"><a href="#__codelineno-0-94">94</a></span>
+<span class="normal"><a href="#__codelineno-0-95">95</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-60" name="__codelineno-0-60"></a><span class="k">class</span><span class="w"> </span><span class="nc">APISettings</span><span class="p">(</span><span class="n">BaseSettings</span><span class="p">):</span>
+<a id="__codelineno-0-61" name="__codelineno-0-61"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;API application configuration settings.</span>
+<a id="__codelineno-0-62" name="__codelineno-0-62"></a>
+<a id="__codelineno-0-63" name="__codelineno-0-63"></a><span class="sd">    Loads settings from .env file using the &quot;APP_&quot; prefix.</span>
+<a id="__codelineno-0-64" name="__codelineno-0-64"></a><span class="sd">    All environment variables must be prefixed with APP_ to be recognized.</span>
+<a id="__codelineno-0-65" name="__codelineno-0-65"></a>
+<a id="__codelineno-0-66" name="__codelineno-0-66"></a><span class="sd">    Attributes:</span>
+<a id="__codelineno-0-67" name="__codelineno-0-67"></a><span class="sd">        host (str): API server host address. Default: &quot;192.168.1.69&quot;.</span>
+<a id="__codelineno-0-68" name="__codelineno-0-68"></a><span class="sd">        port (int): API server port number. Default: 8000.</span>
+<a id="__codelineno-0-69" name="__codelineno-0-69"></a><span class="sd">        app_name (str): Application name. Default: &quot;DDFR API&quot;.</span>
+<a id="__codelineno-0-70" name="__codelineno-0-70"></a><span class="sd">        description (str): API description. Default: &quot;API per il riconoscimento facciale e la gestione delle persone&quot;.</span>
+<a id="__codelineno-0-71" name="__codelineno-0-71"></a><span class="sd">        app_version (str): Application version. Default: &quot;1.0.0&quot;.</span>
+<a id="__codelineno-0-72" name="__codelineno-0-72"></a><span class="sd">        tollerance (float): Face recognition tolerance threshold. Default: 0.5.</span>
+<a id="__codelineno-0-73" name="__codelineno-0-73"></a><span class="sd">        debug (bool): Enable debug mode. Default: False.</span>
+<a id="__codelineno-0-74" name="__codelineno-0-74"></a><span class="sd">        use_https (bool): Enable HTTPS. Default: False.</span>
+<a id="__codelineno-0-75" name="__codelineno-0-75"></a><span class="sd">        keypath (Optional[str]): Path to SSL private key file. Default: None.</span>
+<a id="__codelineno-0-76" name="__codelineno-0-76"></a><span class="sd">        certpath (Optional[str]): Path to SSL certificate file. Default: None.</span>
+<a id="__codelineno-0-77" name="__codelineno-0-77"></a>
+<a id="__codelineno-0-78" name="__codelineno-0-78"></a><span class="sd">    &quot;&quot;&quot;</span>
+<a id="__codelineno-0-79" name="__codelineno-0-79"></a>
+<a id="__codelineno-0-80" name="__codelineno-0-80"></a>    <span class="n">host</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;192.168.1.69&quot;</span>
+<a id="__codelineno-0-81" name="__codelineno-0-81"></a>    <span class="n">port</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">8000</span>
+<a id="__codelineno-0-82" name="__codelineno-0-82"></a>    <span class="n">app_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;DDFR API&quot;</span>
+<a id="__codelineno-0-83" name="__codelineno-0-83"></a>    <span class="n">description</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;API per il riconoscimento facciale e la gestione delle persone&quot;</span>
+<a id="__codelineno-0-84" name="__codelineno-0-84"></a>    <span class="n">app_version</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;1.0.0&quot;</span>
+<a id="__codelineno-0-85" name="__codelineno-0-85"></a>    <span class="n">tollerance</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.5</span>
+<a id="__codelineno-0-86" name="__codelineno-0-86"></a>    <span class="n">debug</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+<a id="__codelineno-0-87" name="__codelineno-0-87"></a>    <span class="n">use_https</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+<a id="__codelineno-0-88" name="__codelineno-0-88"></a>    <span class="n">keypath</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+<a id="__codelineno-0-89" name="__codelineno-0-89"></a>    <span class="n">certpath</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+<a id="__codelineno-0-90" name="__codelineno-0-90"></a>
+<a id="__codelineno-0-91" name="__codelineno-0-91"></a>    <span class="k">class</span><span class="w"> </span><span class="nc">Config</span><span class="p">:</span>
+<a id="__codelineno-0-92" name="__codelineno-0-92"></a>        <span class="n">env_prefix</span> <span class="o">=</span> <span class="s2">&quot;APP_&quot;</span>
+<a id="__codelineno-0-93" name="__codelineno-0-93"></a>        <span class="n">env_file</span> <span class="o">=</span> <span class="n">ENV_FILE_PATH</span>
+<a id="__codelineno-0-94" name="__codelineno-0-94"></a>        <span class="n">env_file_encoding</span> <span class="o">=</span> <span class="s1">&#39;utf-8&#39;</span>
+<a id="__codelineno-0-95" name="__codelineno-0-95"></a>        <span class="n">extra</span> <span class="o">=</span> <span class="s2">&quot;ignore&quot;</span>
+</code></pre></div></td></tr></table></div>
+              </details>
+
+
+
+<div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+
+
+
+  </div>
+
+    </div>
+
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.tabs", "navigation.sections", "navigation.expand", "navigation.top", "search.suggest", "search.highlight", "content.code.annotate"], "search": "../../assets/javascripts/workers/search.7a47a382.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.e71a0d61.min.js"></script>
+      
+    
+  </body>
+</html>
