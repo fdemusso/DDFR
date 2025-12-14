@@ -4,8 +4,6 @@
 
 </div>
 
-
-
 <p align="center">
   <img src="https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white" alt="Python"/>
   <img src="https://img.shields.io/badge/FaceRecognition-%23007ACC?style=for-the-badge&logo=python&logoColor=white" alt="FaceRecognition"/>
@@ -14,7 +12,6 @@
   <img src="https://img.shields.io/badge/Uvicorn-2C3E50?style=for-the-badge&logo=fastapi&logoColor=white" alt="Uvicorn"/>
   <img src="https://img.shields.io/badge/JavaScript-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black" alt="JavaScript"/>
 </p>
-
 
 ## Table of Contents 
 
@@ -27,7 +24,9 @@
 
 ## Description
 
-DDFR is not just a computer vision system; it is a digital companion designed to restore confidence to those living with dementia. Thanks to advanced technology, the system recognizes the faces of friends and relatives in real-time, discreetly whispering to the patient who is in front of them and recalling past conversations. DDFR transforms uncertainty into familiarity, helping to keep the most precious bonds alive day after day.
+Memory is the quiet thread that weaves the tapestry of our identity. When that thread begins to fray, the world can become a fragmented, uncertain place. DDFR is not merely a computer vision system; it is a digital anchor designed to restore confidence and dignity to those living with dementia.
+
+Leveraging a sophisticated modular architecture, DDFR acts as an external memory extension. It perceives the environment in real-time, identifying the faces of loved ones—friends, family, caregivers—and discreetly bridges the cognitive gap. Currently, the system provides immediate visual identification, transforming the anxiety of the unknown into the comfort of familiarity. It is technology stepping back to let humanity come forward, helping to keep the most precious bonds alive.
 
 ## Technologies
 
@@ -36,44 +35,83 @@ DDFR is built on a modern and modular architecture, designed to ensure real-time
 ### Frontend & User Experience
 The user interface is developed to be accessible, clear, and immediate.
 
-* **React:** Used to create a reactive and fluid Single Page Application (SPA). The visual component is optimized to ensure readability and ease of use, essential factors for the target audience.
+* **React:** Used to create a reactive and fluid Single Page Application (SPA). The visual component is optimized to ensure readability and ease of use.
 * **npm:** Manages the dependency ecosystem, ensuring a stable and up-to-date development environment.
 
 ### Backend & Core Performance
 The heart of the system is a robust backend that handles high-speed data flow.
 
 * **Python:** The reference language for data processing and artificial intelligence.
-* **FastAPI:** Chosen for its exceptional performance and ability to handle asynchronous operations. It provides the REST APIs that connect the system's eye (the camera) to the brain (the server) and the user interface.
-* **Uvicorn:** The "lightning-fast" ASGI server that keeps the system online and responsive, handling multiple requests without perceptible latency.
+* **FastAPI:** Chosen for its exceptional performance. It provides the REST APIs that connect the system's eye (the camera) to the brain (the server).
+* **Uvicorn:** The ASGI server that keeps the system online and responsive, handling multiple requests without perceptible latency.
 
 ### Database & Data Storage
 The system's long-term memory, essential for flexible data storage.
 
-* **MongoDB:** A document-oriented NoSQL database. It was chosen for its scalability and flexibility in managing complex data structures, such as relative registries, biometric vectors for facial recognition, and future conversation logs.
+* **MongoDB:** A document-oriented NoSQL database chosen for its scalability in managing complex data structures, such as relative registries and biometric vectors.
 
 ### Computer Vision (AI)
-* **Face Recognition (Python Lib):** The biometric recognition engine. This library, an industry standard for precision and simplicity, maps and identifies known faces (friends and relatives) with a high degree of reliability, ensuring recognition even in variable conditions.
+* **Face Recognition (Python Lib):** The biometric recognition engine. This library maps and identifies known faces with a high degree of reliability.
 
-<div align="center">
+## Installation
 
-![In Development](https://img.shields.io/badge/Currently%20in-%20early%20development-red?style=flat&logo=github&logoColor=white)
+Setting up DDFR involves preparing the environment where the digital memory will reside. The process is automated to ensure all dependencies—from the visual cortex to the database connection—are correctly aligned.
 
-</div>
+### 1. Prerequisite Automation
+We have prepared automated scripts to handle the installation of the necessary libraries and system requirements.
 
-## Usage
-![Working Progress](https://img.shields.io/badge/status-working%20progress-orange?style=flat&logo=github&logoColor=white)
+* **Windows:** Execute `setup.bat`
+* **Linux/MacOS:** Execute `setup.sh`
 
-## Contributing
-![Working Progress](https://img.shields.io/badge/status-working%20progress-orange?style=flat&logo=github&logoColor=white)
+### 2. Configuration
+Before the system can breathe, it requires configuration. DDFR relies on specific environment variables to manage secure connections and database access.
 
-## License
-Distributed under the *GPLv3* license. See `LICENSE` for more information.
+**Backend Configuration**
+Please refer to the technical documentation for the Python environment setup: [Config Documentation](https://fdemusso.github.io/DDFR/config/config/)
 
+**Frontend Configuration**
+Create a `.env.development.local` file in the frontend directory. This establishes the secure link (HTTPS) required for webcam access and defines the WebSocket protocol for real-time communication.
 
-### Developer Notes (not for public)
-To start the local database server: 
+```env
+HTTPS=true
+SSL_KEY_FILE=<path_to_your_key.pem>
+SSL_CRT_FILE=<path_to_your_cert.pem>
+HOST=ddfr.local
+PORT=3000
+REACT_APP_WS_HOST=ddfr.local
+REACT_APP_WS_PORT=8000
+REACT_APP_WS_PROTOCOL=wss
+```
 
+*Note: Ensure your SSL certificates are generated and placed correctly to allow the browser to trust the local camera stream.*
+
+##UsageOnce the environment is prepared, the system must be awakened manually. The architecture requires the simultaneous operation of the brain (backend) and the eyes (frontend).
+
+###Awakening the System1. **Start the Database:** Ensure your MongoDB instance is running locally.
+2. **Start the Brain:** In your terminal, navigate to the backend directory and launch the secure server:
 ```bash
-nohup /Users/flaviodemusso/mongodb-macos-aarch64--8.2.2/bin/mongod --dbpath /Users/flaviodemusso/Desktop/DDFR/database --logpath /Users/flaviodemusso/Desktop/DDFR/database/mongodb.log > mongod.out 2>&1 &
+python main.py https
+```
 
 
+3. **Open the Eyes:** In a separate terminal, launch the user interface:
+```bash
+npm start
+```
+
+
+
+###The ExperienceUpon launching, the browser will request permission to access the webcam. This is the moment the system begins to observe. Currently, the recognition data—the faces of relatives and friends—must be manually curated in the database (admin phase).
+
+When a known face appears before the camera, DDFR processes the biometric data and provides immediate text-based feedback on the screen, identifying the person. This text is the precursor to the upcoming "human-like" text-to-speech engine.
+
+##ContributingWe are currently in the phase of solidifying the foundation. The core logic for recognition is complete, and we are not looking for new feature implementations at this moment.
+
+Our primary need is for **Testers** and **Code Reviewers**.
+
+* **Code Review:** We need architects to review the codebase for cleanliness, order, and adherence to best practices.
+* **Testing:** Verification of the installation scripts and the stability of the WebSocket connections across different environments.
+
+If you wish to help polish this digital companion, please verify the code structure and report any inconsistencies.
+
+##LicenseDistributed under the *GPLv3* license. See `LICENSE` for more information.
