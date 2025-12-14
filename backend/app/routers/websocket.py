@@ -1,8 +1,15 @@
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
+import os
 import cv2
+# Limitiamo i problemi che può causare il Multithreading a numpy
+os.environ["OMP_NUM_THREADS"] = "1"
+os.environ["OPENBLAS_NUM_THREADS"] = "1"
+os.environ["MKL_NUM_THREADS"] = "1"
+os.environ["VECLIB_MAXIMUM_THREADS"] = "1"
+os.environ["NUMEXPR_NUM_THREADS"] = "1"
 import numpy as np
 import logging
-import os
+
 import asyncio
 from concurrent.futures import ThreadPoolExecutor
 
@@ -17,20 +24,36 @@ import services.recognition as fr
 logger = logging.getLogger(__name__)
 router = APIRouter()
 
-DATASET = database.Database(
+dataset = database.Database(
     url=set.url,
     name=set.name,
     collection=set.collection,
 )
-people = DATASET.get_all_people()
+people = dataset.get_all_people()
 engine = fr.FaceEngine(people)
 
-if engine.FeatureMatrix is None:
-    logger.error(f"FeatureMatrix None dopo inizializzazione. Persone caricate: {len(people)}")   
+if engine.feature_matrix is None:
+    logger.error(f"feature_matrix None dopo inizializzazione. Persone caricate: {len(people)}")   
 
 executor = ThreadPoolExecutor(max_workers=1) #Riceviamo solo un frame per volta
 
-def process_image_sync(image_bytes):
+def process_image_sync(image_bytes: bytes) -> dict | None:
+    """Process image bytes synchronously for face detection and recognition.
+
+    Decodes image bytes, detects faces, and identifies persons using the face engine.
+    Returns face detection results with bounding boxes and person information.
+
+    Args:
+        image_bytes (bytes): Raw image bytes to process.
+
+    Returns:
+        dict | None: Dictionary containing status and list of detected faces.
+            Format: {"status": "ok", "faces": [{"id": str, "top": int, "right": int, 
+            "bottom": int, "left": int, "name": str, "surname": str, "age": int,
+            "relationship": str, "role": str}, ...]}
+            Returns None if image decoding fails.
+
+    """
     try:
         np_arr = np.frombuffer(image_bytes, np.uint8)
         frame = cv2.imdecode(np_arr, cv2.IMREAD_COLOR)
@@ -44,12 +67,21 @@ def process_image_sync(image_bytes):
     faces: List[Face] = engine.analyze_frame(frame)
     found_people_list: List[Tuple[Optional[Person], Face]] = []
 
-    if engine.FeatureMatrix is not None:
-        for face in faces:
-            found_person, score = engine.identify(face.embedding, threshold=0.4)
+    # Nessun volto rilevato (uscita rapida)
+    if not faces:
+        return {"status": "ok", "faces": []}
+
+    # Abbiamo volti E il Database è attivo -> BATCH PROCESSING
+    if engine.feature_matrix is not None:
+        embeddings = [face.embedding for face in faces]
+        identities = engine.identify(embeddings, threshold=0.4)
+        
+        for (found_person, score), face in zip(identities, faces):
             found_people_list.append((found_person, face))
+            
+    # Abbiamo volti MA il Database non c'è (Fallback)
     else:
-        logger.error(f"FeatureMatrix None ma rilevati {len(faces)} volti")
+        logger.error(f"feature_matrix None ma rilevati {len(faces)} volti")
         for face in faces:
             found_people_list.append((None, face))
 
@@ -93,6 +125,20 @@ def process_image_sync(image_bytes):
         
 @router.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):
+    """WebSocket endpoint for real-time face recognition.
+
+    Accepts binary image data over WebSocket connection, processes frames
+    asynchronously for face detection and recognition, and returns results in JSON format.
+    Rate limiting is handled on the frontend (50ms = 20 FPS).
+
+    Args:
+        websocket (WebSocket): FastAPI WebSocket connection instance.
+
+    Raises:
+        WebSocketDisconnect: When client disconnects from the WebSocket.
+        Exception: Logs any errors during image processing or WebSocket communication.
+
+    """
     await websocket.accept()
     loop = asyncio.get_event_loop()
 

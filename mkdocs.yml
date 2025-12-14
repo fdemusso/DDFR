@@ -1,0 +1,82 @@
+site_name: DDFR Backend Documentation
+site_description: Official documentation for DDFR backend API
+site_author: DDFR Team
+
+repo_url: https://github.com/fdemusso/DDFR
+repo_name: DDFR
+
+theme:
+  name: material
+  palette:
+    - scheme: default
+      primary: blue
+      accent: blue
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - scheme: slate
+      primary: blue
+      accent: blue
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - navigation.expand
+    - navigation.top
+    - search.suggest
+    - search.highlight
+    - content.code.annotate
+
+plugins:
+  - search
+  - mkdocstrings:
+      handlers:
+        python:
+          paths: [backend]
+          options:
+            docstring_style: google
+            docstring_options:
+              ignore_init_summary: false
+            show_source: true
+            show_root_heading: true
+            show_root_toc_entry: true
+            show_category_heading: true
+            show_if_no_docstring: false
+            separate_signature: true
+            line_length: 80
+
+markdown_extensions:
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - admonition
+  - pymdownx.details
+  - attr_list
+  - md_in_html
+
+nav:
+  - Home: index.md
+  - Configuration:
+    - Configuration: config/config.md
+  - API:
+    - Routes: api/routes.md
+    - WebSocket: api/websocket.md
+  - Services:
+    - Database: services/database.md
+    - Recognition: services/recognition.md
+  - Models:
+    - Person: models/person.md
+  - Utils:
+    - Constants: utils/constants.md
+    - Image Validation: utils/img.md
+  - Scripts:
+    - Insert Data: scripts/insertdata.md
+

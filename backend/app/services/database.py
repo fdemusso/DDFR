@@ -14,10 +14,35 @@ from utils.constants import RoleType
 logger = logging.getLogger(__name__)
 
 class Database():
+    """MongoDB database service for person data management.
+
+    Manages connections to MongoDB, handles CRUD operations for Person objects,
+    and maintains a cached reference to the user/patient (role=USER) person.
+
+    Attributes:
+        current_client (Optional[pymongo.MongoClient]): Class-level MongoDB client instance.
+        url (str): MongoDB connection URL.
+        name_db (str): Database name.
+        collection_name (str): Collection name within the database.
+        patient (Optional[Person]): Cached reference to the user/patient person.
+
+    """
+
     current_client = None 
 
     def __init__(self, url: str, name: str, collection: str):
+        """Initialize Database instance and establish connection.
 
+        Args:
+            url (str): MongoDB connection URL.
+            name (str): Database name.
+            collection (str): Collection name.
+
+        Raises:
+            ConnectionFailure: If connection to MongoDB fails.
+            ValueError: If connection URL conflicts with existing connection.
+
+        """
         self.url = url
         self.name_db = name
         self.collection_name = collection
@@ -26,7 +51,13 @@ class Database():
         self.patient = self.check_patient_existence()
 
     @property
-    def is_connected(self):
+    def is_connected(self) -> bool:
+        """Check if database connection is active.
+
+        Returns:
+            bool: True if connection is active and responsive, False otherwise.
+
+        """
         if self.current_client is None:
             return False
         try:
@@ -36,6 +67,14 @@ class Database():
             return False
 
     def check_patient_existence(self) -> Optional[Person] | None:
+        """Check if a patient (role=USER) exists in the database.
+
+        Returns cached patient if available, otherwise queries the database.
+
+        Returns:
+            Optional[Person]: Patient person if found, None otherwise.
+
+        """
         cached_patient: Optional[Person] = getattr(self, "patient", None)
         if cached_patient is not None:
             return cached_patient
@@ -49,7 +88,24 @@ class Database():
         return patient
 
     @classmethod
-    def get_connection(cls, url):
+    def get_connection(cls, url: str) -> pymongo.MongoClient | None:
+        """Get or create MongoDB client connection.
+
+        Creates a new connection if none exists, or validates existing connection.
+        Uses singleton pattern to share connection across instances.
+
+        Args:
+            url (str): MongoDB connection URL.
+
+        Returns:
+            pymongo.MongoClient | None: MongoDB client instance, or None if URL is invalid.
+
+        Raises:
+            ConnectionFailure: If connection fails.
+            ConfigurationError: If connection configuration is invalid.
+            ValueError: If URL conflicts with existing connection.
+
+        """
         if url is None:
             logger.error("URL di connessione non fornito.")
             return None
@@ -81,16 +137,28 @@ class Database():
 
         return cls.current_client
     
-
-
     @classmethod
     def close_connection(cls):
+        """Close MongoDB connection and reset client.
+
+        Closes the shared MongoDB client connection and sets it to None.
+
+        """
         if cls.current_client is not None:
             cls.current_client.close()
             cls.current_client = None
     
     @staticmethod
     def convert_to_objectid(id_string: str) -> Optional[ObjectId]:
+        """Convert string ID to MongoDB ObjectId.
+
+        Args:
+            id_string (str): String representation of MongoDB ObjectId.
+
+        Returns:
+            Optional[ObjectId]: ObjectId if valid, None otherwise.
+
+        """
         if id_string is None:
              return None
         try:
@@ -101,6 +169,18 @@ class Database():
     
     @staticmethod
     def _person_to_document(person: Person) -> dict:
+        """Convert Person object to MongoDB document format.
+
+        Serializes Person to dictionary, handling dates, enums, and numpy arrays
+        in encoding dictionaries for MongoDB storage.
+
+        Args:
+            person (Person): Person object to serialize.
+
+        Returns:
+            dict: Dictionary ready for MongoDB insertion/update.
+
+        """
         # Serializza Person per Mongo, gestendo date ed Enums
         person_dict = person.model_dump(by_alias=True, exclude_none=True)
         
@@ -133,6 +213,15 @@ class Database():
 
     @staticmethod
     def _person_from_doc(doc: Optional[dict]) -> Optional[Person]:
+        """Convert MongoDB document to Person object.
+
+        Args:
+            doc (Optional[dict]): MongoDB document dictionary.
+
+        Returns:
+            Optional[Person]: Person object if valid, None otherwise.
+
+        """
         if doc is None:
             return None
         try:
@@ -141,7 +230,13 @@ class Database():
             logger.error(f"Documento Person non valido: {exc}")
             return None
     
-    def get_collection(self):
+    def get_collection(self) -> pymongo.collection.Collection | None:
+        """Get MongoDB collection instance.
+
+        Returns:
+            pymongo.collection.Collection | None: MongoDB collection instance, or None if connection fails.
+
+        """
         client = None
         try :
             client = self.get_connection(self.url)
@@ -149,10 +244,30 @@ class Database():
             logger.critical(f"Impossibile collegarsi al database per ottenere la collezione: {e}")
             return None
         
+        if client is None:
+            return None
+        
         db = client[self.name_db] 
         return db[self.collection_name]
     
     def add_person(self, person: Person) -> Optional[Person] | None:
+        """Add a new person to the database.
+
+        Inserts person document into MongoDB. Ensures only one USER role person exists.
+        Updates person.id with the inserted document ID.
+
+        Args:
+            person (Person): Person object to insert.
+
+        Returns:
+            Optional[Person]: Person object with assigned ID if successful, None otherwise.
+
+        Raises:
+            DuplicateKeyError: If duplicate key constraint violation occurs.
+            WriteConcernError: If write operation fails.
+            ConnectionFailure: If database connection is lost.
+
+        """
         collection = self.get_collection()
         person_dict = self._person_to_document(person)
 
@@ -189,11 +304,28 @@ class Database():
 
     @staticmethod
     def _rollback_user_slot(person: Person):
+        """Reset user slot if person role is USER.
+
+        Args:
+            person (Person): Person object to check for USER role.
+
+        """
         if person.role == RoleType.USER:
-            Person.reset_user_slot()
-        
+            Person.reset_user_slot()      
     
     def remove_person(self, person_id: str) -> bool:
+        """Remove a person from the database by ID.
+
+        ⚠️ **Deprecated**: This method is not currently used in the application.
+        Consider implementing proper deletion endpoints if needed.
+
+        Args:
+            person_id (str): Person's MongoDB ObjectId as string.
+
+        Returns:
+            bool: True if person was deleted, False otherwise.
+
+        """
         collection = self.get_collection()
 
         oid = Database.convert_to_objectid(person_id)
@@ -213,6 +345,14 @@ class Database():
             return False
     
     def get_all_people(self) -> list[Person]:
+        """Retrieve all people from the database.
+
+        Uses projection to load only necessary fields for performance optimization.
+
+        Returns:
+            list[Person]: List of all Person objects in the database.
+
+        """
         collection = self.get_collection()
         # Projection: carica solo i campi necessari per ottimizzare prestazioni
         projection = {
@@ -233,6 +373,20 @@ class Database():
         return people
 
     def get_person(self, person_id: str) -> Optional[Person]:
+        """Retrieve a person by ID.
+
+        ⚠️ **Deprecated**: This method is not currently used in the application.
+        The application primarily works with `get_all_people()` to load all persons
+        for face recognition. Consider implementing REST API endpoints if individual
+        person retrieval is needed.
+
+        Args:
+            person_id (str): Person's MongoDB ObjectId as string.
+
+        Returns:
+            Optional[Person]: Person object if found, None otherwise.
+
+        """
         collection = self.get_collection()
         oid = Database.convert_to_objectid(person_id)
         if oid is None:
@@ -242,6 +396,20 @@ class Database():
         return self._person_from_doc(doc)
     
     def update_person(self, person_id: str, update_data: Person | dict) -> Optional[Person]:
+        """Update a person's data in the database.
+
+        ⚠️ **Deprecated**: This method is only used internally by `update_people()` which
+        itself is not used. Consider implementing REST API endpoints for person updates
+        if needed.
+
+        Args:
+            person_id (str): Person's MongoDB ObjectId as string.
+            update_data (Person | dict): Person object or dictionary with update fields.
+
+        Returns:
+            Optional[Person]: Updated Person object if successful, None otherwise.
+
+        """
         collection = self.get_collection()
 
         oid = Database.convert_to_objectid(person_id)
@@ -280,6 +448,21 @@ class Database():
         return None
     
     def update_people(self, people: list) -> int:
+        """Update multiple people in the database.
+
+        ⚠️ **Deprecated**: This method is not currently used in the application.
+        Person management is primarily done through `add_person()` during initial setup.
+        Consider implementing batch update functionality via REST API if needed.
+
+        Adds new people (id=None) or updates existing ones based on their ID.
+
+        Args:
+            people (list): List of Person objects to add or update.
+
+        Returns:
+            int: Number of successfully processed people.
+
+        """
         success_count = 0
         for person in people:
             p = None
@@ -296,8 +479,19 @@ class Database():
 
         return success_count
         
+    def get_all_encodings(self) -> tuple[list[str], list[np.ndarray]]:
+        """Extract all face encodings from all people in the database.
 
-    def get_all_encodings(self):
+        ⚠️ **Deprecated**: This method was used with the old `face_recognition` library.
+        The current implementation uses `FaceEngine` which directly processes Person objects
+        with encodings stored in the `encoding` field. Use `get_all_people()` instead and
+        access encodings directly from Person objects.
+
+        Returns:
+            tuple[list[str], list[np.ndarray]]: (known_ids, known_encodings) where known_ids is a list of person IDs
+                and known_encodings is a list of numpy arrays representing face embeddings.
+
+        """
         people = self.get_all_people()
         
         known_encodings = []
@@ -322,6 +516,16 @@ class Database():
         return known_ids, known_encodings
     
     def drop_database(self):
+        """Drop the entire database and close connection.
+
+        ⚠️ **Deprecated**: This method is not currently used in the application.
+        Reserved for testing and maintenance purposes. Use with extreme caution
+        as it permanently deletes all data.
+
+        Permanently deletes the database and all its collections.
+        Resets patient cache and closes connection.
+
+        """
         client = self.get_connection(self.url)
         client.drop_database(self.name_db) 
         if hasattr(self, "patient"):

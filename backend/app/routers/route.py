@@ -10,5 +10,11 @@ logger = logging.getLogger(__name__)
 router = APIRouter()
 
 @router.get("/")
-async def home():
+async def home() -> dict:
+    """Return home endpoint greeting message.
+
+    Returns:
+        dict: A dictionary containing a greeting message.
+
+    """
     return {"message": "Hello World"}

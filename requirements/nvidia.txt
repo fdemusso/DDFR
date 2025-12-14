@@ -3,3 +3,6 @@
 
 # ONNX Runtime per GPU NVIDIA (CUDA)
 onnxruntime-gpu>=1.16.0
+
+# Elaborazione numerica
+faiss-gpu==1.7.4
