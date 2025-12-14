@@ -11,3 +11,4 @@ Enumeration types for the application.
 ::: app.utils.constants.RoleType
 
 
+

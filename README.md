@@ -6,7 +6,7 @@
 
 <p align="center">
   <img src="https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white" alt="Python"/>
-  <img src="https://img.shields.io/badge/FaceRecognition-%23007ACC?style=for-the-badge&logo=python&logoColor=white" alt="FaceRecognition"/>
+  <img src="https://img.shields.io/badge/InsightFace-%23007ACC?style=for-the-badge&logo=python&logoColor=white" alt="InsightFace"/>
   <img src="https://img.shields.io/badge/MongoDB-47A248?style=for-the-badge&logo=mongodb&logoColor=white" alt="MongoDB"/>
   <img src="https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB" alt="React"/>
   <img src="https://img.shields.io/badge/Uvicorn-2C3E50?style=for-the-badge&logo=fastapi&logoColor=white" alt="Uvicorn"/>
@@ -51,7 +51,7 @@ The system's long-term memory, essential for flexible data storage.
 * **MongoDB:** A document-oriented NoSQL database chosen for its scalability in managing complex data structures, such as relative registries and biometric vectors.
 
 ### Computer Vision (AI)
-* **Face Recognition (Python Lib):** The biometric recognition engine. This library maps and identifies known faces with a high degree of reliability.
+* **InsightFace:** Advanced face recognition framework providing state-of-the-art face detection and embedding extraction. The system uses InsightFace's pre-trained models to map and identify known faces with high accuracy and reliability. The engine supports GPU acceleration (CUDA, CoreML, DML) when available, with automatic fallback to CPU execution.
 
 ## Installation
 
