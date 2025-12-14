@@ -3,3 +3,6 @@
 
 # ONNX Runtime per DirectML (Windows AMD/Intel)
 onnxruntime-directml>=1.16.0
+
+# Elaborazione numerica
+faiss-cpu==1.7.4

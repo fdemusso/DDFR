@@ -3,3 +3,4 @@
 
 # ONNX Runtime standard (supporta Apple Silicon con CoreML)
 onnxruntime>=1.16.0
+faiss-cpu==1.7.4

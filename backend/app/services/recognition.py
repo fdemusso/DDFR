@@ -10,6 +10,31 @@ import onnxruntime as ort
 import utils.img as img
 from models.person import Person
 
+# --- FAISS SETUP (Auto-detection) ---
+try:
+    import faiss
+    FAISS_AVAILABLE = True
+    
+    # Tentativo preliminare di verificare se la libreria supporta la GPU
+    # (Non istanziamo ancora risorse pesanti, verifichiamo solo l'importabilità)
+    try:
+        # Questo test serve a capire se 'faiss-gpu' è installato e funzionante
+        # Se siamo su faiss-cpu, StandardGpuResources solleverà un'eccezione
+        res = faiss.StandardGpuResources()
+        test_index = faiss.IndexFlatIP(128)
+        faiss.index_cpu_to_gpu(res, 0, test_index)
+        FAISS_GPU_AVAILABLE = True
+    except AttributeError:
+        # Se manca StandardGpuResources, è sicuramente la versione CPU
+        FAISS_GPU_AVAILABLE = False
+    except Exception:
+        # Altri errori (es. driver CUDA mancanti)
+        FAISS_GPU_AVAILABLE = False
+        
+except ImportError:
+    FAISS_AVAILABLE = False
+    FAISS_GPU_AVAILABLE = False
+
 MODEL = "buffalo_l"
 DETECTION_SIZE = 640
 
@@ -19,14 +44,45 @@ class FaceEngine:
     def __init__(self, people : list):
         self.FeatureMatrix : np.ndarray | None = None
         self.user_map: list[Person] = []
+        self.index = None
         self.app = self._initialize_model(people)
+
+
+    def _initialize_faiss_index(self, enable_gpu=False):
+        if not FAISS_AVAILABLE or self.FeatureMatrix is None:
+            return
+
+        d = self.FeatureMatrix.shape[1]
+        
+        cpu_index = faiss.IndexFlatIP(d)
+        cpu_index.add(self.FeatureMatrix.astype(np.float32))
+
+        # Tentativo passaggio a GPU (solo se richiesto e disponibile)
+        if enable_gpu and FAISS_GPU_AVAILABLE:
+            try:
+                # Risorse GPU standard (necessarie per FAISS GPU)
+                self.gpu_resources = faiss.StandardGpuResources()
+                
+                # Sposta l'indice dalla RAM (CPU) alla VRAM (GPU)
+                self.index = faiss.index_cpu_to_gpu(self.gpu_resources, 0, cpu_index)
+                logger.info(f"FAISS: Indice spostato su GPU (CUDA attiva)")
+            except Exception as e:
+                logger.warning(f"FAISS GPU fallito (fallback su CPU): {e}")
+                self.index = cpu_index
+        else:
+            self.index = cpu_index
+            mode = "CPU (Forzata)" if not enable_gpu else "CPU (GPU non disp.)"
+            logger.info(f"FAISS: Indice creato su {mode}")
         
     def _initialize_model(self, people):
         available_providers = ort.get_available_providers()
         providers_list = []
         
+        using_cuda = False
+
         if 'CUDAExecutionProvider' in available_providers:
             providers_list.append('CUDAExecutionProvider')
+            using_cuda = True
         elif 'CoreMLExecutionProvider' in available_providers:
             providers_list.append('CoreMLExecutionProvider') 
         elif 'DmlExecutionProvider' in available_providers:
@@ -87,6 +143,7 @@ class FaceEngine:
             feature_norms[feature_norms == 0] = 1.0
             self.FeatureMatrix = self.FeatureMatrix / feature_norms
             logger.info(f"FeatureMatrix pre-normalizzata: {self.FeatureMatrix.shape[0]} embeddings")
+            self._initialize_faiss_index(using_cuda)
         else:
             self.FeatureMatrix = None
             logger.warning("Database vuoto: nessun encoding trovato.")
@@ -118,41 +175,61 @@ class FaceEngine:
         return {pic.hash : embedding_list}
     
     def identify(self, target_data, threshold=0.5):
+        # Controllo Database
         if self.FeatureMatrix is None:
             logger.warning("FeatureMatrix è None: database vuoto o non inizializzato")
             n_items = len(target_data) if isinstance(target_data, list) else 1
             return [(None, 0.0)] * n_items
 
+        # Preparazione Input (Matrice N x D)
         if isinstance(target_data, list) and len(target_data) > 0 and isinstance(target_data[0], np.ndarray):
             input_matrix = np.stack(target_data)
         else:
             input_matrix = np.array(target_data, dtype=np.float32)
-       
         
         if input_matrix.ndim == 1:
             input_matrix = input_matrix.reshape(1, -1)
 
-        # Normalizzazione L2 (Vettorializzata)
+        # Importante: FAISS vuole float32
+        input_matrix = input_matrix.astype(np.float32)
+
+        # Normalizzazione L2
         norms = np.linalg.norm(input_matrix, axis=1, keepdims=True)
-        # Evito la divisone per 0
         norms[norms == 0] = 1e-10
         normalized_matrix = input_matrix / norms
 
-        all_scores = np.dot(normalized_matrix, self.FeatureMatrix.T)
-        
-        best_indices = np.argmax(all_scores, axis=1)   
-        best_scores = np.max(all_scores, axis=1)
-        
+        # --- FAISS vs NUMPY ---
+        best_indices = None
+        best_scores = None
+
+        # Controllo se self.index esiste (creato da _initialize_faiss_index)
+        if getattr(self, 'index', None) is not None:
+            # k=1 significa "trova solo il più simile"
+            scores, indices = self.index.search(normalized_matrix, k=1)
+            
+            # Appiattiamo i risultati (da matrice Nx1 a vettori N)
+            best_scores = scores.flatten()
+            best_indices = indices.flatten()
+        else:
+            # PERCORSO NUMPY
+            all_scores = np.dot(normalized_matrix, self.FeatureMatrix.T)
+            best_indices = np.argmax(all_scores, axis=1)
+            best_scores = np.max(all_scores, axis=1)
+
+        # Formattazione Risultati
         results = []
         for idx, score in zip(best_indices, best_scores):
+            idx = int(idx)     # Cast a int nativo Python
+            score = float(score) # Cast a float nativo Python
+
             if score > threshold:
                 if idx < len(self.user_map):
-                    results.append((self.user_map[idx], float(score))) # lista di persona : punteggio
+                    results.append((self.user_map[idx], score))
                 else:
                     logger.error(f"Index {idx} fuori range user_map")
-                    results.append((None, float(score)))
+                    results.append((None, score))
             else:
-                results.append((None, float(score)))
+                results.append((None, score))
         
         return results
 
