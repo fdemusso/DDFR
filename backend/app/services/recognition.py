@@ -1,5 +1,6 @@
 import logging
 import sys
+import os
 import numpy as np
 import cv2
 
@@ -41,21 +42,49 @@ DETECTION_SIZE = 640
 logger = logging.getLogger(__name__)
 
 class FaceEngine:
+    """Face recognition engine using InsightFace and FAISS for similarity search.
+
+    Manages face detection, embedding extraction, and person identification
+    using pre-trained models and efficient vector similarity search.
+
+    Attributes:
+        feature_matrix (np.ndarray | None): Normalized matrix of face embeddings.
+        user_map (list[Person]): List of Person objects corresponding to embeddings.
+        index: FAISS index for fast similarity search (optional).
+        app: InsightFace FaceAnalysis model instance.
+
+    """
+
     def __init__(self, people : list):
-        self.FeatureMatrix : np.ndarray | None = None
+        """Initialize FaceEngine with person data.
+
+        Args:
+            people (list): List of Person objects with face encodings to initialize the engine.
+
+        """
+        self.feature_matrix : np.ndarray | None = None
         self.user_map: list[Person] = []
         self.index = None
         self.app = self._initialize_model(people)
 
 
     def _initialize_faiss_index(self, enable_gpu=False):
-        if not FAISS_AVAILABLE or self.FeatureMatrix is None:
+        """Initialize FAISS index for fast similarity search.
+
+        Creates FAISS index from feature matrix, optionally using GPU acceleration
+        if available and requested.
+
+        Args:
+            enable_gpu (bool): Whether to attempt GPU acceleration. Default: False.
+
+        """
+        if not FAISS_AVAILABLE or self.feature_matrix is None:
             return
 
-        d = self.FeatureMatrix.shape[1]
+        d = self.feature_matrix.shape[1]
         
         cpu_index = faiss.IndexFlatIP(d)
-        cpu_index.add(self.FeatureMatrix.astype(np.float32))
+        cpu_index.add(self.feature_matrix.astype(np.float32))
 
         # Tentativo passaggio a GPU (solo se richiesto e disponibile)
         if enable_gpu and FAISS_GPU_AVAILABLE:
@@ -75,6 +104,23 @@ class FaceEngine:
             logger.info(f"FAISS: Indice creato su {mode}")
         
     def _initialize_model(self, people):
+        """Initialize InsightFace model and build feature matrix from people data.
+
+        Selects best available execution provider (CUDA, CoreML, DML, or CPU),
+        initializes the face analysis model, and builds normalized feature matrix
+        from person encodings. Initializes FAISS index if embeddings are available.
+
+        Args:
+            people (list): List of Person objects with encodings.
+
+        Returns:
+            FaceAnalysis: Initialized InsightFace model instance.
+
+        Raises:
+            SystemExit: If model initialization fails.
+            ValueError: If feature matrix and user_map dimensions don't match.
+
+        """
         available_providers = ort.get_available_providers()
         providers_list = []
         
@@ -97,7 +143,7 @@ class FaceEngine:
             logger.critical(f"Impossibile avviare il modello: {e}")
             sys.exit(1)
 
-        AllEmbeddings = []
+        all_embeddings = []
         self.user_map = []
         embedding_dimension = None
         
@@ -124,40 +170,62 @@ class FaceEngine:
                         logger.error(f"Embedding con valori NaN/Inf per {person.name} {person.surname} (hash: {hash})")
                         continue
                     
-                    AllEmbeddings.append(np_vector)
+                    all_embeddings.append(np_vector)
                     self.user_map.append(person)
                 except Exception as e:
                     logger.error(f"Errore nel processare encoding per {person.name} {person.surname} (hash: {hash}): {e}")
                     continue
 
-        if len(AllEmbeddings) > 0:
-            self.FeatureMatrix = np.vstack(AllEmbeddings)
-            if len(self.user_map) != self.FeatureMatrix.shape[0]:
-                logger.error(f"ERRORE CRITICO: Dimensione user_map ({len(self.user_map)}) non corrisponde a FeatureMatrix ({self.FeatureMatrix.shape[0]})")
-                raise ValueError("Inconsistenza tra user_map e FeatureMatrix")
-            if np.any(np.isnan(self.FeatureMatrix)) or np.any(np.isinf(self.FeatureMatrix)):
-                logger.error("FeatureMatrix contiene valori NaN o Inf!")
+        if len(all_embeddings) > 0:
+            self.feature_matrix = np.vstack(all_embeddings)
+            if len(self.user_map) != self.feature_matrix.shape[0]:
+                logger.error(f"ERRORE CRITICO: Dimensione user_map ({len(self.user_map)}) non corrisponde a feature_matrix ({self.feature_matrix.shape[0]})")
+                raise ValueError("Inconsistenza tra user_map e feature_matrix")
+            if np.any(np.isnan(self.feature_matrix)) or np.any(np.isinf(self.feature_matrix)):
+                logger.error("feature_matrix contiene valori NaN o Inf!")
             
-            # Pre-normalizza la FeatureMatrix una volta sola (ottimizzazione prestazioni)
-            feature_norms = np.linalg.norm(self.FeatureMatrix, axis=1, keepdims=True)
+            # Pre-normalizza la feature_matrix una volta sola (ottimizzazione prestazioni)
+            feature_norms = np.linalg.norm(self.feature_matrix, axis=1, keepdims=True)
             feature_norms[feature_norms == 0] = 1.0
-            self.FeatureMatrix = self.FeatureMatrix / feature_norms
-            logger.info(f"FeatureMatrix pre-normalizzata: {self.FeatureMatrix.shape[0]} embeddings")
+            self.feature_matrix = self.feature_matrix / feature_norms
+            logger.info(f"feature_matrix pre-normalizzata: {self.feature_matrix.shape[0]} embeddings")
             self._initialize_faiss_index(using_cuda)
         else:
-            self.FeatureMatrix = None
+            self.feature_matrix = None
             logger.warning("Database vuoto: nessun encoding trovato.")
         return model
 
-    def analyze_frame(self, frame_bgr: np.ndarray):
+    def analyze_frame(self, frame_bgr: np.ndarray) -> list:
+        """Detect and extract face embeddings from a BGR frame.
 
+        Args:
+            frame_bgr (np.ndarray): Input image frame in BGR format.
+
+        Returns:
+            list: List of Face objects with detected faces and embeddings.
+                Returns empty list if frame is None or no faces detected.
+
+        """
         if frame_bgr is None:
             return []
         
         faces = self.app.get(frame_bgr)
         return faces
     
-    def analyze_img(self, path):
+    def analyze_img(self, path: str | os.PathLike) -> dict | None:
+        """Analyze an image file and extract face embedding.
+
+        Validates and normalizes the image, detects faces, and extracts
+        embedding from the largest detected face.
+
+        Args:
+            path: Path to image file (Path object or string).
+
+        Returns:
+            dict | None: Dictionary mapping image hash to embedding list, or None if
+                no valid face detected.
+
+        """
         pic = img.ImgValidation(path, delete=True)
 
         if pic.path is None:
@@ -174,10 +242,25 @@ class FaceEngine:
 
         return {pic.hash : embedding_list}
     
-    def identify(self, target_data, threshold=0.5):
+    def identify(self, target_data: np.ndarray | list[np.ndarray], threshold: float = 0.5) -> list[tuple[Optional[Person], float]]:
+        """Identify persons from face embeddings using similarity search.
+
+        Uses FAISS index (if available) or numpy dot product to find the most
+        similar person embeddings. Returns matches above the similarity threshold.
+
+        Args:
+            target_data: Single embedding (np.ndarray) or list of embeddings to identify.
+            threshold (float): Minimum similarity score (0.0-1.0) to consider a match.
+                Default: 0.5.
+
+        Returns:
+            list[tuple[Optional[Person], float]]: List of tuples (Person, score) for each input embedding.
+                Returns (None, score) if no match above threshold found.
+
+        """
         # Controllo Database
-        if self.FeatureMatrix is None:
-            logger.warning("FeatureMatrix è None: database vuoto o non inizializzato")
+        if self.feature_matrix is None:
+            logger.warning("feature_matrix è None: database vuoto o non inizializzato")
             n_items = len(target_data) if isinstance(target_data, list) else 1
             return [(None, 0.0)] * n_items
 
@@ -212,7 +295,7 @@ class FaceEngine:
             best_indices = indices.flatten()
         else:
             # PERCORSO NUMPY
-            all_scores = np.dot(normalized_matrix, self.FeatureMatrix.T)
+            all_scores = np.dot(normalized_matrix, self.feature_matrix.T)
             best_indices = np.argmax(all_scores, axis=1)
             best_scores = np.max(all_scores, axis=1)
 

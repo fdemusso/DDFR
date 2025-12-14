@@ -45,6 +45,19 @@ from routers import route      # noqa: E402
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    """Manage application lifespan events.
+
+    Context manager for FastAPI application startup and shutdown events.
+    Currently performs no operations, but can be extended for initialization
+    and cleanup tasks.
+
+    Args:
+        app (FastAPI): The FastAPI application instance.
+
+    Yields:
+        None: Control is yielded to the application.
+
+    """
     yield
 
 
@@ -69,6 +82,12 @@ app.include_router(route.router)
 
 @app.get("/")
 def read_root():
+    """Return root endpoint status message.
+
+    Returns:
+        dict: A dictionary containing a status message indicating the server is active.
+
+    """
     return {"message": "Server Face Recognition attivo"}
 
 if __name__ == "__main__":

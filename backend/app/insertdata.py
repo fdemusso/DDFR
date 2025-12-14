@@ -28,10 +28,19 @@ logger = logging.getLogger(__name__)
 
 
 def _build_demo_person() -> Person:
+    """Build a demo Person instance with predefined values.
+
+    Creates a Person object with hardcoded demo data for testing purposes.
+
+    Returns:
+        Person: A Person instance with demo data (name: "Demo", 
+            surname: "User", birthday: 2000-01-01, role: GUEST).
+
+    """
     return Person(
-        name="Vincenzo",
-        surname="Rotolo",
-        birthday=datetime(2005, 6, 17),
+        name="Demo",
+        surname="User",
+        birthday=datetime(2000, 1, 1),
         role=RoleType.GUEST,
     )
 
@@ -39,13 +48,19 @@ def _build_demo_person() -> Person:
 
 
 def main() -> None:
+    """Main function to insert demo person data into the database.
 
-    DATASET = database.Database(
+    Analyzes all images in the configured images folder, extracts face encodings,
+    and inserts a demo person with the collected encodings into the database.
+    Logs errors if no valid encodings are found or if database insertion fails.
+
+    """
+    dataset = database.Database(
         url=set.url,
         name=set.name,
         collection=set.collection,
     )
-    people = DATASET.get_all_people() 
+    people = dataset.get_all_people() 
     engine = FaceEngine(people)   
     demo_person = _build_demo_person()
     
@@ -68,7 +83,7 @@ def main() -> None:
         return
 
     demo_person.encoding = all_encodings
-    saved = DATASET.add_person(demo_person)
+    saved = dataset.add_person(demo_person)
 
     if saved is not None:
         logger.info(f"Inserimento completato. ID: {saved.id} - Totale foto: {len(all_encodings)}")
