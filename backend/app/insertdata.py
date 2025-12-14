@@ -29,8 +29,8 @@ logger = logging.getLogger(__name__)
 
 def _build_demo_person() -> Person:
     return Person(
-        name="Vincenzo",
-        surname="Rotolo",
+        name="Giuseppe",
+        surname="Di Cosola",
         birthday=datetime(2005, 6, 17),
         role=RoleType.GUEST,
     )
