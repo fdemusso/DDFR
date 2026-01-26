@@ -46,7 +46,6 @@ if "!VC_INSTALLED!"=="0" (
         call :check_vs_path "%%p"
     )
 )
-echo DEBUG VC_INSTALLED=!VC_INSTALLED! VC_PATH=!VC_PATH!
 
 REM -------------------------------------------------------------------------
 REM ESITO CONTROLLO

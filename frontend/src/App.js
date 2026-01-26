@@ -71,7 +71,7 @@ function App() {
   const { ws, connectionStatus, isProcessing } = useWebSocket(handleMessage);
 
   // Hook per cattura e invio frame (con requestAnimationFrame)
-  const { captureCanvasRef } = useWebcam(webcamRef, ws, isProcessing, markSent);
+  useWebcam(webcamRef, ws, isProcessing, markSent);
 
   // Calcolo scale factors con useMemo (ottimizzazione)
   // Le coordinate dal backend sono basate sul frame ridimensionato (CAPTURE_WIDTH x CAPTURE_HEIGHT)
@@ -86,7 +86,7 @@ function App() {
       scaleX: videoEl.clientWidth / CAPTURE_WIDTH,
       scaleY: videoEl.clientHeight / CAPTURE_HEIGHT,
     };
-  }, [faces]); // Ricalcola quando cambiano i faces
+  }, []); // Ricalcola solo quando il componente viene montato o il video cambia
 
   // Handler fullscreen
   const requestFullscreen = () => {
@@ -159,7 +159,7 @@ function App() {
   // Se non c'è paziente, mostra setup wizard
   if (!hasPatient) {
     return (
-      <div className="App">
+      <div className="App" style={{ overflow: 'auto', background: 'hsl(var(--background))' }}>
         <SetupWizard onComplete={handleSetupComplete} />
       </div>
     );

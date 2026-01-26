@@ -75,16 +75,75 @@ class Database():
             Optional[Person]: Patient person if found, None otherwise.
 
         """
+        logger.info("   [check_patient_existence] Inizio controllo esistenza paziente")
         cached_patient: Optional[Person] = getattr(self, "patient", None)
+        if cached_patient:
+            logger.info(f"   [check_patient_existence] Paziente in cache: ID={cached_patient.id}, name={cached_patient.name}")
+        else:
+            logger.info(f"   [check_patient_existence] Paziente in cache: None")
+        
         if cached_patient is not None:
+            logger.info(f"   [check_patient_existence] Restituito paziente dalla cache: {cached_patient.name} {cached_patient.surname}")
             return cached_patient
         
+        logger.info("   [check_patient_existence] Cache vuota, eseguo query sul database...")
         collection = self.get_collection()
+        if collection is None:
+            logger.error("   [check_patient_existence] ERRORE: Collection e None!")
+            return None
+        
+        logger.info(f"   [check_patient_existence] Collection ottenuta: database={self.name_db}, collection={self.collection_name}")
+        
+        # Cerca con il valore dell'enum (stringa "user")
         query = {"role": RoleType.USER.value}
-        doc = collection.find_one(query)
-        patient = self._person_from_doc(doc)
+        logger.info(f"   [check_patient_existence] Eseguo query: {query}")
+        logger.info(f"   [check_patient_existence] RoleType.USER.value = '{RoleType.USER.value}'")
+        
+        try:
+            doc = collection.find_one(query, {"encoding": 0})  # Escludi encoding dalla projection
+            if doc:
+                logger.info(f"   [check_patient_existence] Documento trovato: _id={doc.get('_id')}, role={doc.get('role')}, name={doc.get('name')}")
+            else:
+                logger.info(f"   [check_patient_existence] Nessun documento trovato")
+        except Exception as e:
+            logger.error(f"   [check_patient_existence] ERRORE durante query: {e}", exc_info=True)
+            return None
+        
+        if doc is None:
+            logger.warning("   [check_patient_existence] WARNING: Nessun documento trovato con role=USER")
+            # Verifica se ci sono documenti nella collection
+            total_docs = collection.count_documents({})
+            logger.info(f"   [check_patient_existence] Totale documenti nella collection: {total_docs}")
+            if total_docs > 0:
+                # Mostra alcuni documenti per debug (senza encoding)
+                sample_docs = list(collection.find({}, {"encoding": 0}).limit(5))  # Escludi encoding dalla projection
+                logger.info(f"   [check_patient_existence] Esempi di documenti nella collection:")
+                for sample_doc in sample_docs:
+                    logger.info(f"      - _id={sample_doc.get('_id')}, role={sample_doc.get('role')}, name={sample_doc.get('name')}, surname={sample_doc.get('surname')}")
+            return None
+        
+        logger.info(f"   [check_patient_existence] OK: Documento trovato: _id={doc.get('_id')}")
+        logger.info(f"   [check_patient_existence] Contenuto documento: role={doc.get('role')}, name={doc.get('name')}, surname={doc.get('surname')}")
+        has_encoding = 'encoding' in doc and doc.get('encoding') is not None
+        encoding_count = len(doc.get('encoding', {})) if has_encoding else 0
+        logger.info(f"   [check_patient_existence] Documento ha encoding: {has_encoding}, encoding_count={encoding_count}")
+        
+        try:
+            patient = self._person_from_doc(doc)
+            if patient:
+                logger.info(f"   [check_patient_existence] Conversione OK: Person(id={patient.id}, name={patient.name}, surname={patient.surname}, role={patient.role})")
+            else:
+                logger.warning("   [check_patient_existence] Conversione restituito None")
+        except Exception as e:
+            logger.error(f"   [check_patient_existence] ERRORE nella conversione documento: {e}", exc_info=True)
+            return None
+        
         if patient:
             self.patient = patient
+            logger.info(f"   [check_patient_existence] OK: Paziente caricato e salvato in cache: {patient.name} {patient.surname} (ID: {patient.id}, role: {patient.role})")
+        else:
+            logger.warning("   [check_patient_existence] WARNING: Documento trovato ma conversione ha restituito None")
+        
         return patient
 
     @classmethod

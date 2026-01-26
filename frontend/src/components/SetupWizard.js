@@ -100,28 +100,30 @@ const SetupWizard = ({ onComplete }) => {
     switch (currentStep) {
       case 1:
         return (
-          <div className="space-y-4">
-            <h2 className="text-2xl font-bold">Benvenuto nel Sistema di Riconoscimento Facciale</h2>
-            <p className="text-muted-foreground">
+          <div className="space-y-4 sm:space-y-6">
+            <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold">Benvenuto nel Sistema di Riconoscimento Facciale</h2>
+            <p className="text-sm sm:text-base text-muted-foreground">
               Per iniziare, dobbiamo configurare il profilo del paziente. Questo processo richiederà:
             </p>
-            <ul className="list-disc list-inside space-y-2 text-muted-foreground">
+            <ul className="list-disc list-inside space-y-2 sm:space-y-3 text-sm sm:text-base text-muted-foreground ml-2">
               <li>Caricamento di una o più foto del volto del paziente</li>
               <li>Inserimento dei dati anagrafici</li>
               <li>Conferma e salvataggio</li>
             </ul>
-            <p className="text-sm text-muted-foreground">
-              <strong>Suggerimento:</strong> Per migliori risultati, carica foto con buona illuminazione 
-              e dove il volto è chiaramente visibile.
-            </p>
+            <div className="bg-muted/50 p-4 rounded-lg">
+              <p className="text-sm sm:text-base text-muted-foreground">
+                <strong>Suggerimento:</strong> Per migliori risultati, carica foto con buona illuminazione 
+                e dove il volto è chiaramente visibile.
+              </p>
+            </div>
           </div>
         );
 
       case 2:
         return (
-          <div className="space-y-4">
-            <h2 className="text-2xl font-bold">Carica le Foto del Volto</h2>
-            <p className="text-muted-foreground">
+          <div className="space-y-4 sm:space-y-6">
+            <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold">Carica le Foto del Volto</h2>
+            <p className="text-sm sm:text-base text-muted-foreground">
               Carica o scatta una o più foto del volto del paziente. Più foto forniscono risultati migliori.
             </p>
             <PhotoUploader
@@ -134,9 +136,9 @@ const SetupWizard = ({ onComplete }) => {
 
       case 3:
         return (
-          <div className="space-y-4">
-            <h2 className="text-2xl font-bold">Dati Anagrafici</h2>
-            <p className="text-muted-foreground">
+          <div className="space-y-4 sm:space-y-6">
+            <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold">Dati Anagrafici</h2>
+            <p className="text-sm sm:text-base text-muted-foreground">
               Inserisci i dati anagrafici del paziente.
             </p>
             <PersonForm
@@ -148,15 +150,15 @@ const SetupWizard = ({ onComplete }) => {
 
       case 4:
         return (
-          <div className="space-y-4">
-            <h2 className="text-2xl font-bold">Riepilogo e Conferma</h2>
-            <div className="space-y-4">
+          <div className="space-y-4 sm:space-y-6">
+            <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold">Riepilogo e Conferma</h2>
+            <div className="space-y-4 sm:space-y-6">
               <Card>
                 <CardHeader>
-                  <CardTitle>Dati Anagrafici</CardTitle>
+                  <CardTitle className="text-lg sm:text-xl">Dati Anagrafici</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <dl className="grid grid-cols-2 gap-4">
+                  <dl className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
                     <div>
                       <dt className="text-sm font-medium text-muted-foreground">Nome</dt>
                       <dd className="text-sm">{formData?.name}</dd>
@@ -197,16 +199,16 @@ const SetupWizard = ({ onComplete }) => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background p-4">
-      <Card className="w-full max-w-2xl">
+    <div className="fixed inset-0 w-full h-full flex items-center justify-center bg-background p-4 sm:p-6 lg:p-8 overflow-y-auto">
+      <Card className="w-full max-w-2xl lg:max-w-4xl my-auto">
         <CardHeader>
-          <CardTitle>Configurazione Iniziale</CardTitle>
-          <CardDescription>
+          <CardTitle className="text-xl sm:text-2xl">Configurazione Iniziale</CardTitle>
+          <CardDescription className="text-sm sm:text-base">
             Step {currentStep} di {totalSteps}
           </CardDescription>
           <Progress value={(currentStep / totalSteps) * 100} className="mt-4" />
         </CardHeader>
-        <CardContent className="space-y-6">
+        <CardContent className="space-y-6 sm:space-y-8">
           {error && (
             <Alert variant="destructive">
               <AlertCircle className="h-4 w-4" />
@@ -216,12 +218,13 @@ const SetupWizard = ({ onComplete }) => {
 
           {renderStep()}
 
-          <div className="flex justify-between pt-4">
+          <div className="flex flex-col sm:flex-row justify-between gap-3 sm:gap-0 pt-4 border-t">
             <Button
               type="button"
               variant="outline"
               onClick={prevStep}
               disabled={currentStep === 1 || loading}
+              className="w-full sm:w-auto"
             >
               <ChevronLeft className="h-4 w-4 mr-2" />
               Indietro
@@ -232,6 +235,7 @@ const SetupWizard = ({ onComplete }) => {
                 type="button"
                 onClick={nextStep}
                 disabled={loading}
+                className="w-full sm:w-auto"
               >
                 Avanti
                 <ChevronRight className="h-4 w-4 ml-2" />
@@ -241,6 +245,7 @@ const SetupWizard = ({ onComplete }) => {
                 type="button"
                 onClick={handleFinalSubmit}
                 disabled={loading}
+                className="w-full sm:w-auto"
               >
                 {loading ? 'Salvataggio...' : 'Conferma e Salva'}
                 {!loading && <CheckCircle2 className="h-4 w-4 ml-2" />}

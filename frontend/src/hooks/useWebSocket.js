@@ -12,22 +12,19 @@ export const useWebSocket = (onMessage) => {
   const isProcessing = useRef(false);
   
   const [connectionStatus, setConnectionStatus] = useState("disconnected");
-  const [reconnectAttempts, setReconnectAttempts] = useState(0);
+  const reconnectAttemptsRef = useRef(0);
 
   const scheduleReconnect = () => {
     if (reconnectTimerRef.current) return;
 
-    setReconnectAttempts((prev) => {
-      const attempt = prev + 1;
-      const delay = Math.min(RECONNECT_BASE_DELAY * attempt, RECONNECT_MAX_DELAY);
-      
-      reconnectTimerRef.current = setTimeout(() => {
-        reconnectTimerRef.current = null;
-        initWebSocket();
-      }, delay);
-      
-      return attempt;
-    });
+    reconnectAttemptsRef.current += 1;
+    const attempt = reconnectAttemptsRef.current;
+    const delay = Math.min(RECONNECT_BASE_DELAY * attempt, RECONNECT_MAX_DELAY);
+    
+    reconnectTimerRef.current = setTimeout(() => {
+      reconnectTimerRef.current = null;
+      initWebSocket();
+    }, delay);
   };
 
   const initWebSocket = () => {
@@ -40,7 +37,7 @@ export const useWebSocket = (onMessage) => {
       socket.onopen = () => {
         console.log("WS Connesso con successo a:", wsUrl);
         setConnectionStatus("connected");
-        setReconnectAttempts(0);
+        reconnectAttemptsRef.current = 0;
         if (reconnectTimerRef.current) {
           clearTimeout(reconnectTimerRef.current);
           reconnectTimerRef.current = null;

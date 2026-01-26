@@ -59,17 +59,72 @@ async def get_status() -> dict:
         dict: Dictionary with has_patient (bool) and total_people (int).
 
     """
+    logger.info("=== INIZIO CHECK STATUS DATABASE ===")
     try:
+        logger.info("1. Ottenimento istanza database...")
         dataset = get_database()
+        logger.info(f"   Database ottenuto: url={set.url}, name={set.name}, collection={set.collection}")
+        
+        # Forza refresh della cache del paziente per assicurarsi di avere dati aggiornati
+        logger.info("2. Reset cache paziente...")
+        old_patient = dataset.patient
+        if old_patient:
+            logger.info(f"   Paziente in cache prima del reset: ID={old_patient.id}, name={old_patient.name}")
+        else:
+            logger.info(f"   Paziente in cache prima del reset: None")
+        dataset.patient = None
+        
+        logger.info("3. Controllo esistenza paziente nel database...")
         patient = dataset.check_patient_existence()
+        if patient:
+            logger.info(f"   Risultato check_patient_existence: Person(id={patient.id}, name={patient.name}, surname={patient.surname}, role={patient.role})")
+        else:
+            logger.info(f"   Risultato check_patient_existence: None")
+        
+        if patient is None:
+            logger.warning("   WARNING: NESSUN PAZIENTE TROVATO!")
+        else:
+            logger.info(f"   OK: Paziente trovato: ID={patient.id}, name={patient.name}, surname={patient.surname}, role={patient.role}")
+            if dataset.patient:
+                logger.info(f"   Paziente in cache dopo check: ID={dataset.patient.id}, name={dataset.patient.name}")
+        
+        logger.info("4. Recupero tutte le persone dal database...")
         all_people = dataset.get_all_people()
+        logger.info(f"   Totale persone trovate: {len(all_people)}")
+        
+        # Log dettagliato di tutte le persone (senza encoding)
+        for idx, person in enumerate(all_people):
+            has_encoding = person.encoding is not None and len(person.encoding) > 0
+            encoding_count = len(person.encoding) if person.encoding else 0
+            logger.info(f"   Persona {idx+1}: ID={person.id}, name={person.name}, surname={person.surname}, role={person.role}, encoding_count={encoding_count}")
+        
+        # Verifica manuale se c'è un USER nel database
+        logger.info("5. Verifica manuale presenza USER nel database...")
+        collection = dataset.get_collection()
+        if collection is None:
+            logger.error("   ERRORE: Collection e None!")
+        else:
+            logger.info(f"   Collection ottenuta: {collection.name}")
+            manual_query = {"role": RoleType.USER.value}
+            logger.info(f"   Query manuale: {manual_query}")
+            manual_doc = collection.find_one(manual_query, {"encoding": 0})  # Escludi encoding dalla projection
+            if manual_doc:
+                logger.info(f"   Documento trovato con query manuale: _id={manual_doc.get('_id')}, role={manual_doc.get('role')}, name={manual_doc.get('name')}, surname={manual_doc.get('surname')}")
+            else:
+                logger.info(f"   Nessun documento trovato con query manuale")
+        
+        has_patient = patient is not None
+        logger.info(f"6. Risultato finale: has_patient={has_patient}, total_people={len(all_people)}")
+        logger.info("=== FINE CHECK STATUS DATABASE ===")
         
         return {
-            "has_patient": patient is not None,
+            "has_patient": has_patient,
             "total_people": len(all_people)
         }
     except Exception as e:
-        logger.error(f"Errore nel controllo stato database: {e}")
+        logger.error(f"ERRORE nel controllo stato database: {e}", exc_info=True)
+        logger.error(f"   Tipo errore: {type(e).__name__}")
+        logger.error(f"   Messaggio: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Errore nel controllo stato: {str(e)}")
 
 @router.post("/api/person")

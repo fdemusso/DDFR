@@ -3,7 +3,6 @@ import Webcam from 'react-webcam';
 import { Button } from './ui/button';
 import { Card, CardContent } from './ui/card';
 import { X, Camera, Upload } from 'lucide-react';
-import { cn } from '../lib/utils';
 
 const PhotoUploader = ({ photos = [], onPhotosChange, maxPhotos = 10 }) => {
   const [capturing, setCapturing] = useState(false);
@@ -69,17 +68,17 @@ const PhotoUploader = ({ photos = [], onPhotosChange, maxPhotos = 10 }) => {
   };
 
   return (
-    <div className="space-y-4">
-      <div className="flex gap-2">
+    <div className="space-y-4 sm:space-y-6">
+      <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
         <Button
           type="button"
           variant="outline"
           onClick={() => fileInputRef.current?.click()}
           disabled={photos.length >= maxPhotos}
-          className="flex items-center gap-2"
+          className="flex items-center justify-center gap-2 w-full sm:w-auto"
         >
           <Upload className="h-4 w-4" />
-          Carica Foto
+          <span className="text-sm sm:text-base">Carica Foto</span>
         </Button>
         
         <Button
@@ -87,10 +86,10 @@ const PhotoUploader = ({ photos = [], onPhotosChange, maxPhotos = 10 }) => {
           variant="outline"
           onClick={handleCapture}
           disabled={capturing || photos.length >= maxPhotos}
-          className="flex items-center gap-2"
+          className="flex items-center justify-center gap-2 w-full sm:w-auto"
         >
           <Camera className="h-4 w-4" />
-          {capturing ? 'Scattando...' : 'Scatta Foto'}
+          <span className="text-sm sm:text-base">{capturing ? 'Scattando...' : 'Scatta Foto'}</span>
         </Button>
       </div>
 
@@ -117,7 +116,7 @@ const PhotoUploader = ({ photos = [], onPhotosChange, maxPhotos = 10 }) => {
 
       {/* Preview delle foto */}
       {photos.length > 0 && (
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-4">
           {photos.map((photo, index) => (
             <Card key={index} className="relative">
               <CardContent className="p-2">

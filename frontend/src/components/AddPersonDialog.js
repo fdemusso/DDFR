@@ -12,14 +12,13 @@ import { Progress } from './ui/progress';
 import { Alert, AlertDescription } from './ui/alert';
 import PhotoUploader from './PhotoUploader';
 import PersonForm from './PersonForm';
-import { ChevronRight, ChevronLeft, CheckCircle2, AlertCircle, X } from 'lucide-react';
+import { ChevronRight, ChevronLeft, CheckCircle2, AlertCircle } from 'lucide-react';
 
 const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000';
 
 const AddPersonDialog = ({ open, onOpenChange, onSuccess }) => {
   const [currentStep, setCurrentStep] = useState(1);
   const [photos, setPhotos] = useState([]);
-  const [formData, setFormData] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
@@ -28,7 +27,6 @@ const AddPersonDialog = ({ open, onOpenChange, onSuccess }) => {
   const resetDialog = () => {
     setCurrentStep(1);
     setPhotos([]);
-    setFormData(null);
     setError(null);
     setLoading(false);
   };
@@ -49,7 +47,6 @@ const AddPersonDialog = ({ open, onOpenChange, onSuccess }) => {
       return;
     }
 
-    setFormData(data);
     setLoading(true);
     setError(null);
 

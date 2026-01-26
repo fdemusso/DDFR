@@ -1,6 +1,5 @@
 import React from 'react';
 import { Card, CardContent } from './ui/card';
-import { cn } from '../lib/utils';
 
 /**
  * Componente per visualizzare informazioni di debug/stato
