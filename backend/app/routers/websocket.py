@@ -17,25 +17,14 @@ from insightface.app.common import Face
 from models.person import Person
 from typing import List, Tuple, Optional
 
-from config import database_settings as set, api_settings
-from services import database
 import services.recognition as fr
+
+from . import route
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
 
-dataset = database.Database(
-    url=set.url,
-    name=set.name,
-    collection=set.collection,
-)
-people = dataset.get_all_people()
-engine = fr.FaceEngine(people)
-
-if engine.feature_matrix is None:
-    logger.error(f"feature_matrix None dopo inizializzazione. Persone caricate: {len(people)}")   
-
-executor = ThreadPoolExecutor(max_workers=1) #Riceviamo solo un frame per volta
+executor = ThreadPoolExecutor(max_workers=1)
 
 def process_image_sync(image_bytes: bytes) -> dict | None:
     """Process image bytes synchronously for face detection and recognition.
@@ -54,6 +43,7 @@ def process_image_sync(image_bytes: bytes) -> dict | None:
             Returns None if image decoding fails.
 
     """
+    engine = route.get_engine()
     try:
         np_arr = np.frombuffer(image_bytes, np.uint8)
         frame = cv2.imdecode(np_arr, cv2.IMREAD_COLOR)
@@ -87,9 +77,29 @@ def process_image_sync(image_bytes: bytes) -> dict | None:
 
     faces_data = []
     
+    # Ottieni dimensioni frame per validazione coordinate
+    frame_height, frame_width = frame.shape[:2]
+    logger.info(f"Frame processato: {frame_width}x{frame_height} (aspect ratio: {frame_width/frame_height:.2f})")
+    
     for person_data, face in found_people_list:
         bbox = face.bbox.astype(int)
         left, top, right, bottom = int(bbox[0]), int(bbox[1]), int(bbox[2]), int(bbox[3])
+        
+        # Log dettagliato per debug coordinate
+        logger.info(f"Bbox InsightFace: {bbox} -> left={left}, top={top}, right={right}, bottom={bottom}")
+        logger.info(f"  Dimensioni bbox: width={right-left}, height={bottom-top}")
+        logger.info(f"  Posizione: center_x={(left+right)/2:.1f}, center_y={(top+bottom)/2:.1f}")
+        
+        # Validazione coordinate (devono essere dentro il frame)
+        if left < 0 or top < 0 or right > frame_width or bottom > frame_height:
+            logger.warning(f"Coordinate bbox fuori range: left={left}, top={top}, "
+                         f"right={right}, bottom={bottom}, frame={frame_width}x{frame_height}")
+            # Clamp coordinate ai limiti del frame
+            left = max(0, min(left, frame_width - 1))
+            top = max(0, min(top, frame_height - 1))
+            right = max(left + 1, min(right, frame_width))
+            bottom = max(top + 1, min(bottom, frame_height))
+            logger.info(f"  Coordinate dopo clamp: left={left}, top={top}, right={right}, bottom={bottom}")
 
         face_dict = {
             "id": f"{top}_{left}",
@@ -149,8 +159,10 @@ async def websocket_endpoint(websocket: WebSocket):
             # Il rate limiting è gestito lato frontend (50ms = 20 FPS)
             result = await loop.run_in_executor(executor, process_image_sync, data)
 
-            if result:
-                await websocket.send_json(result)
+            # Invia sempre una risposta per sbloccare il frontend (isProcessing).
+            # Se result è None (decode fallito) inviamo comunque {"status":"ok","faces":[]}.
+            payload = result if result is not None else {"status": "ok", "faces": []}
+            await websocket.send_json(payload)
 
     except WebSocketDisconnect:
         logger.info("Client disconnesso")

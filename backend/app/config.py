@@ -26,7 +26,7 @@ class DatabaseSettings(BaseSettings):
     """
 
     url: str = "mongodb://localhost:27017/"
-    name: str = "ddfr_db"
+    name: str = "ddfr_dev_db"
     collection: str = "people"
     hash: str 
     
