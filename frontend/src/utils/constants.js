@@ -12,6 +12,21 @@ export const getWebSocketUrl = () => {
   return `${protocol}://${host}:${port}/ws`;
 };
 
+// API URL
+export const getApiUrl = () => {
+  // Se REACT_APP_API_URL è definito, usalo direttamente
+  if (process.env.REACT_APP_API_URL) {
+    return process.env.REACT_APP_API_URL;
+  }
+  
+  // Altrimenti costruisci l'URL usando le stesse variabili del WebSocket
+  const protocol = process.env.REACT_APP_WS_PROTOCOL === 'wss' ? 'https' : 'http';
+  const host = process.env.REACT_APP_WS_HOST || window.location.hostname;
+  const port = process.env.REACT_APP_WS_PORT || 8000;
+  
+  return `${protocol}://${host}:${port}`;
+};
+
 // Intervalli e timing
 export const MIN_FRAME_INTERVAL = 15; // ms (~13 FPS - bilanciamento ottimale tra fluidità e performance)
 export const RECONNECT_BASE_DELAY = 3000; // ms

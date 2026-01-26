@@ -13,8 +13,9 @@ import { Alert, AlertDescription } from './ui/alert';
 import PhotoUploader from './PhotoUploader';
 import PersonForm from './PersonForm';
 import { ChevronRight, ChevronLeft, CheckCircle2, AlertCircle } from 'lucide-react';
+import { getApiUrl } from '../utils/constants';
 
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000';
+const API_BASE_URL = getApiUrl();
 
 const AddPersonDialog = ({ open, onOpenChange, onSuccess }) => {
   const [currentStep, setCurrentStep] = useState(1);

@@ -8,7 +8,7 @@ import { useFaceDetection } from './hooks/useFaceDetection';
 import { useLatency } from './hooks/useLatency';
 
 // Constants
-import { CAPTURE_WIDTH, CAPTURE_HEIGHT } from './utils/constants';
+import { CAPTURE_WIDTH, CAPTURE_HEIGHT, getApiUrl } from './utils/constants';
 
 // Componenti
 import WebcamView from './components/WebcamView';
@@ -18,10 +18,11 @@ import CameraToggle from './components/CameraToggle';
 import DebugInfo from './components/DebugInfo';
 import SetupWizard from './components/SetupWizard';
 import AddPersonDialog from './components/AddPersonDialog';
+import BetaBanner from './components/BetaBanner';
 import { Button } from './components/ui/button';
 import { UserPlus } from 'lucide-react';
 
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000';
+const API_BASE_URL = getApiUrl();
 
 function App() {
   const webcamRef = useRef(null);
@@ -73,20 +74,113 @@ function App() {
   // Hook per cattura e invio frame (con requestAnimationFrame)
   useWebcam(webcamRef, ws, isProcessing, markSent);
 
+  // Stato per forzare il ricalcolo dello scaling quando le dimensioni cambiano
+  const [videoDimensions, setVideoDimensions] = useState({ width: 0, height: 0, clientWidth: 0, clientHeight: 0 });
+  
+  // Effect per aggiornare le dimensioni del video quando cambiano
+  useEffect(() => {
+    if (!isCameraReady) return;
+    
+    const updateDimensions = () => {
+      const videoEl = webcamRef.current?.video;
+      if (videoEl && videoEl.videoWidth && videoEl.videoHeight && videoEl.clientWidth && videoEl.clientHeight) {
+        setVideoDimensions({
+          width: videoEl.videoWidth,
+          height: videoEl.videoHeight,
+          clientWidth: videoEl.clientWidth,
+          clientHeight: videoEl.clientHeight
+        });
+      }
+    };
+    
+    // Aggiorna immediatamente
+    updateDimensions();
+    
+    // Aggiorna quando la finestra viene ridimensionata
+    window.addEventListener('resize', updateDimensions);
+    
+    // Aggiorna periodicamente per catturare cambiamenti (es. fullscreen)
+    const interval = setInterval(updateDimensions, 500);
+    
+    return () => {
+      window.removeEventListener('resize', updateDimensions);
+      clearInterval(interval);
+    };
+  }, [isCameraReady]);
+  
   // Calcolo scale factors con useMemo (ottimizzazione)
-  // Le coordinate dal backend sono basate sul frame ridimensionato (CAPTURE_WIDTH x CAPTURE_HEIGHT)
-  // quindi dobbiamo scalare da quelle dimensioni alle dimensioni mostrate del video
-  const { scaleX, scaleY } = useMemo(() => {
+  // Le coordinate dal backend sono basate sul frame ridimensionato (CAPTURE_WIDTH x CAPTURE_HEIGHT = 640x480)
+  // Il frame viene catturato usando drawImage(video, 0, 0, CAPTURE_WIDTH, CAPTURE_HEIGHT)
+  // quindi le coordinate sono sempre relative a 640x480
+  // Dobbiamo scalare dalle coordinate 640x480 alle dimensioni del video renderizzato VISIBILE
+  const { scaleX, scaleY, offsetX, offsetY } = useMemo(() => {
     const videoEl = webcamRef.current?.video;
-    if (!videoEl || !videoEl.clientWidth || !videoEl.clientHeight) {
-      return { scaleX: 1, scaleY: 1 };
+    if (!videoEl || !videoDimensions.width || !videoDimensions.height || !videoDimensions.clientWidth || !videoDimensions.clientHeight) {
+      return { scaleX: 1, scaleY: 1, offsetX: 0, offsetY: 0 };
     }
     
+    // Dimensioni del frame catturato (quello inviato al backend)
+    const captureWidth = CAPTURE_WIDTH;  // 640
+    const captureHeight = CAPTURE_HEIGHT; // 480
+    
+    // Dimensioni reali del video (usa lo stato per garantire che siano aggiornate)
+    const videoWidth = videoDimensions.width;
+    const videoHeight = videoDimensions.height;
+    const videoAspect = videoWidth / videoHeight;
+    
+    // Dimensioni del contenitore (dove viene renderizzato il video)
+    const containerWidth = videoDimensions.clientWidth;
+    const containerHeight = videoDimensions.clientHeight;
+    const containerAspect = containerWidth / containerHeight;
+    
+    // Calcola le dimensioni effettive del video renderizzato con object-fit: cover
+    // object-fit: cover mantiene l'aspect ratio e riempie il contenitore, tagliando se necessario
+    let renderedWidth, renderedHeight;
+    if (videoAspect > containerAspect) {
+      // Il video è più largo del contenitore -> viene scalato in base all'altezza
+      renderedHeight = containerHeight;
+      renderedWidth = containerHeight * videoAspect;
+    } else {
+      // Il video è più alto del contenitore -> viene scalato in base alla larghezza
+      renderedWidth = containerWidth;
+      renderedHeight = containerWidth / videoAspect;
+    }
+    
+    // IMPORTANTE: Il frame viene catturato dal video originale usando drawImage(video, 0, 0, 640, 480)
+    // Questo ridimensiona/stira il video originale a 640x480
+    // Le coordinate dal backend sono relative a quel frame 640x480
+    
+    // Il video viene renderizzato con object-fit: cover, che riempie il contenitore
+    // mantenendo l'aspect ratio originale del video (non quello del frame 640x480)
+    
+    // Per scalare correttamente, dobbiamo:
+    // 1. Capire come il frame 640x480 si relaziona al video originale
+    // 2. Capire come il video originale si relaziona al video renderizzato
+    
+    // Il frame 640x480 è una versione ridimensionata/stirata del video originale
+    // Quindi le coordinate sono relative a quel frame stirato
+    
+    // Scaliamo direttamente dalle dimensioni 640x480 alle dimensioni renderizzate
+    // Questo funziona perché object-fit: cover riempie il contenitore con il video originale
+    // e le coordinate sono relative al frame 640x480 che è una versione del video originale
+    const scaleX = renderedWidth / captureWidth;
+    const scaleY = renderedHeight / captureHeight;
+    
+    // Offset per centrare il video (se viene tagliato da object-fit: cover)
+    // Quando object-fit: cover taglia il video, parte del video è fuori dal contenitore
+    // Le coordinate devono essere spostate per compensare questo taglio
+    // Se il video è più largo del contenitore, viene tagliato ai lati -> offsetX negativo
+    // Se il video è più alto del contenitore, viene tagliato sopra/sotto -> offsetY negativo
+    const offsetX = (renderedWidth - containerWidth) / 2;
+    const offsetY = (renderedHeight - containerHeight) / 2;
+    
     return {
-      scaleX: videoEl.clientWidth / CAPTURE_WIDTH,
-      scaleY: videoEl.clientHeight / CAPTURE_HEIGHT,
+      scaleX,
+      scaleY,
+      offsetX: -offsetX, // Negativo perché le coordinate devono essere spostate a sinistra
+      offsetY: -offsetY   // Negativo perché le coordinate devono essere spostate in alto
     };
-  }, []); // Ricalcola solo quando il componente viene montato o il video cambia
+  }, [isCameraReady, videoDimensions]); // Ricalcola quando la camera è pronta o le dimensioni cambiano
 
   // Handler fullscreen
   const requestFullscreen = () => {
@@ -103,12 +197,20 @@ function App() {
   useEffect(() => {
     const checkStatus = async () => {
       try {
+        console.log('Verifica presenza utente User nel database...');
         const response = await fetch(`${API_BASE_URL}/api/status`);
         if (response.ok) {
           const data = await response.json();
-          setHasPatient(data.has_patient);
+          console.log('Risposta API status:', data);
+          
+          // Assicurati che has_patient sia un booleano
+          const hasUser = Boolean(data.has_patient === true);
+          console.log(`Utente User trovato: ${hasUser} (valore originale: ${data.has_patient}, tipo: ${typeof data.has_patient})`);
+          
+          setHasPatient(hasUser);
         } else {
-          console.error('Errore nel controllo stato database');
+          const errorText = await response.text();
+          console.error('Errore nel controllo stato database:', response.status, errorText);
           setHasPatient(false); // Default a false per mostrare setup
         }
       } catch (error) {
@@ -156,13 +258,20 @@ function App() {
     );
   }
 
-  // Se non c'è paziente, mostra setup wizard
-  if (!hasPatient) {
+  // Se non c'è paziente (hasPatient è esplicitamente false), mostra setup wizard
+  // IMPORTANTE: mostra SetupWizard SOLO se hasPatient è false, non se è null o true
+  if (hasPatient === false) {
+    console.log('Nessun utente User trovato nel database. Mostro SetupWizard.');
     return (
       <div className="App" style={{ overflow: 'auto', background: 'hsl(var(--background))' }}>
         <SetupWizard onComplete={handleSetupComplete} />
       </div>
     );
+  }
+
+  // Se hasPatient è true, NON mostrare SetupWizard
+  if (hasPatient === true) {
+    console.log('Utente User trovato nel database. Mostro vista principale.');
   }
 
   // Vista principale con camera (solo se c'è paziente)
@@ -190,6 +299,9 @@ function App() {
         style={{ position: 'relative' }}
         onClick={() => !isFullscreen && requestFullscreen()}
       >
+        {/* Beta Banner */}
+        <BetaBanner />
+
         {/* Status Overlay */}
         <StatusOverlay 
           connectionStatus={connectionStatus}
@@ -221,6 +333,8 @@ function App() {
             face={face}
             scaleX={scaleX}
             scaleY={scaleY}
+            offsetX={offsetX}
+            offsetY={offsetY}
             index={index}
           />
         ))}

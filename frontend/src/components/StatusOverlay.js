@@ -1,39 +1,93 @@
 import React from 'react';
-import { Card, CardContent } from './ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
+import { Badge } from './ui/badge';
+import { Separator } from './ui/separator';
+import { Activity, Wifi, Video, Users, Gauge } from 'lucide-react';
 
 /**
  * Componente per visualizzare informazioni di debug/stato
  */
 const StatusOverlay = ({ connectionStatus, framesSent, facesCount, latency, avgLatency }) => {
-  // Colore latenza basato su performance
-  const getLatencyColor = (lat) => {
-    if (lat < 50) return 'text-green-500'; // Verde - Ottimo
-    if (lat < 100) return 'text-green-400'; // Verde chiaro - Buono
-    if (lat < 150) return 'text-yellow-500'; // Giallo - Accettabile
-    if (lat < 250) return 'text-orange-500'; // Arancione - Lento
-    return 'text-red-500'; // Rosso - Molto lento
+  // Variante badge per latenza basata su performance
+  const getLatencyVariant = (lat) => {
+    if (lat < 50) return 'success'; // Verde - Ottimo
+    if (lat < 100) return 'success'; // Verde - Buono
+    if (lat < 150) return 'warning'; // Giallo - Accettabile
+    if (lat < 250) return 'warning'; // Giallo - Lento
+    return 'error'; // Rosso - Molto lento
   };
 
+  const isConnected = connectionStatus === 'connected';
+
   return (
-    <Card className="absolute top-2 left-2 z-10 bg-black/60 border-border/50">
-      <CardContent className="p-2 text-xs font-mono text-green-500">
-        <div className="flex items-center gap-2 mb-1">
-          <span className="material-symbols-outlined text-sm">lan</span>
-          <span>SYSTEM_STATUS</span>
+    <Card className="absolute top-2 left-2 z-10 bg-background/95 backdrop-blur-sm border shadow-lg min-w-[200px]">
+      <CardHeader className="pb-2">
+        <div className="flex items-center gap-2">
+          <Activity className="h-4 w-4 text-primary" />
+          <CardTitle className="text-sm">System Status</CardTitle>
         </div>
-        <div>
-          WS: <span className={connectionStatus === 'connected' ? 'text-green-500' : 'text-red-500'}>
+      </CardHeader>
+      <CardContent className="space-y-3">
+        {/* WebSocket Status */}
+        <div className="flex items-center justify-between gap-4">
+          <div className="flex items-center gap-2">
+            <Wifi className="h-3.5 w-3.5 text-muted-foreground" />
+            <span className="text-xs text-muted-foreground">WebSocket</span>
+          </div>
+          <Badge 
+            variant={isConnected ? 'success' : 'error'}
+            className="text-xs ml-auto"
+          >
             {connectionStatus}
-          </span>
+          </Badge>
         </div>
-        <div>FRAMES: {framesSent}</div>
-        <div>TARGETS: {facesCount}</div>
-        <div>
-          LATENCY: <span className={getLatencyColor(latency)}>
-            {latency}ms
-          </span>
+
+        <Separator />
+
+        {/* Frames Sent */}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Video className="h-3.5 w-3.5 text-muted-foreground" />
+            <span className="text-xs text-muted-foreground">Frames</span>
+          </div>
+          <Badge variant="secondary" className="font-mono text-xs">
+            {framesSent}
+          </Badge>
+        </div>
+
+        {/* Targets Detected */}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Users className="h-3.5 w-3.5 text-muted-foreground" />
+            <span className="text-xs text-muted-foreground">Targets</span>
+          </div>
+          <Badge variant="secondary" className="font-mono text-xs">
+            {facesCount}
+          </Badge>
+        </div>
+
+        <Separator />
+
+        {/* Latency */}
+        <div className="space-y-1">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Gauge className="h-3.5 w-3.5 text-muted-foreground" />
+              <span className="text-xs text-muted-foreground">Latency</span>
+            </div>
+            <Badge 
+              variant={getLatencyVariant(latency)}
+              className="font-mono text-xs"
+            >
+              {latency}ms
+            </Badge>
+          </div>
           {avgLatency > 0 && (
-            <span className="opacity-70 text-[10px]"> (avg: {avgLatency}ms)</span>
+            <div className="flex justify-end">
+              <span className="text-[10px] text-muted-foreground">
+                avg: {avgLatency}ms
+              </span>
+            </div>
           )}
         </div>
       </CardContent>

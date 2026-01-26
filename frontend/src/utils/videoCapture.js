@@ -26,7 +26,9 @@ export const captureFrame = (video, canvas = null) => {
   const ctx = canvas.getContext('2d');
   if (!ctx) return null;
 
-  // Disegna il frame ridimensionato
+  // Disegna il frame ridimensionato a 640x480
+  // NOTA: Questo potrebbe distorcere il video se l'aspect ratio è diverso,
+  // ma le coordinate dal backend saranno relative a questo frame 640x480
   ctx.drawImage(video, 0, 0, CAPTURE_WIDTH, CAPTURE_HEIGHT);
 
   return canvas;
