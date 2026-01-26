@@ -1,4 +1,4 @@
-import React, { useRef, useState, useMemo } from 'react';
+import React, { useRef, useState, useMemo, useEffect } from 'react';
 import './App.css';
 
 // Custom Hooks
@@ -16,6 +16,12 @@ import FaceBox from './components/FaceBox';
 import StatusOverlay from './components/StatusOverlay';
 import CameraToggle from './components/CameraToggle';
 import DebugInfo from './components/DebugInfo';
+import SetupWizard from './components/SetupWizard';
+import AddPersonDialog from './components/AddPersonDialog';
+import { Button } from './components/ui/button';
+import { UserPlus } from 'lucide-react';
+
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000';
 
 function App() {
   const webcamRef = useRef(null);
@@ -24,6 +30,9 @@ function App() {
   const [isFrontCamera, setIsFrontCamera] = useState(true);
   const [isCameraReady, setIsCameraReady] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [hasPatient, setHasPatient] = useState(null); // null = loading, true/false = loaded
+  const [showAddPersonDialog, setShowAddPersonDialog] = useState(false);
+  const [isCheckingStatus, setIsCheckingStatus] = useState(true);
 
   // Hook personalizzati per gestione faces
   const { faces, setFaces, framesSent, setFramesSent } = useFaceDetection();
@@ -90,6 +99,73 @@ function App() {
     setIsFullscreen(true);
   };
 
+  // Check database status on mount
+  useEffect(() => {
+    const checkStatus = async () => {
+      try {
+        const response = await fetch(`${API_BASE_URL}/api/status`);
+        if (response.ok) {
+          const data = await response.json();
+          setHasPatient(data.has_patient);
+        } else {
+          console.error('Errore nel controllo stato database');
+          setHasPatient(false); // Default a false per mostrare setup
+        }
+      } catch (error) {
+        console.error('Errore di connessione:', error);
+        setHasPatient(false); // Default a false per mostrare setup
+      } finally {
+        setIsCheckingStatus(false);
+      }
+    };
+
+    checkStatus();
+  }, []);
+
+  // Handler per completamento setup
+  const handleSetupComplete = () => {
+    setHasPatient(true);
+    // Ricarica la pagina per aggiornare tutto
+    window.location.reload();
+  };
+
+  // Handler per successo aggiunta persona
+  const handleAddPersonSuccess = () => {
+    // Ricarica la pagina per aggiornare il database
+    window.location.reload();
+  };
+
+  // Se stiamo controllando lo stato, mostra loading
+  if (isCheckingStatus || hasPatient === null) {
+    return (
+      <div className="App">
+        <div style={{
+          position: 'fixed', inset: 0, background: '#000', zIndex: 100,
+          display: 'flex', flexDirection: 'column', alignItems: 'center', 
+          justifyContent: 'center', color: '#00ff88'
+        }}>
+          <div className="spinner" style={{
+            width: 50, height: 50, border: '3px solid #333', 
+            borderTopColor: '#00ff88', borderRadius: '50%',
+            animation: 'spin 1s linear infinite', marginBottom: 20
+          }} />
+          <div>Controllo configurazione...</div>
+          <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+        </div>
+      </div>
+    );
+  }
+
+  // Se non c'è paziente, mostra setup wizard
+  if (!hasPatient) {
+    return (
+      <div className="App">
+        <SetupWizard onComplete={handleSetupComplete} />
+      </div>
+    );
+  }
+
+  // Vista principale con camera (solo se c'è paziente)
   return (
     <div className="App">
       {/* Loading Screen */}
@@ -148,7 +224,32 @@ function App() {
             index={index}
           />
         ))}
+
+        {/* Pulsante Aggiungi Volto */}
+        <div style={{
+          position: 'absolute',
+          top: '10px',
+          right: '10px',
+          zIndex: 30
+        }}>
+          <Button
+            onClick={() => setShowAddPersonDialog(true)}
+            variant="secondary"
+            size="sm"
+            className="flex items-center gap-2"
+          >
+            <UserPlus className="h-4 w-4" />
+            Aggiungi Volto
+          </Button>
+        </div>
       </div>
+
+      {/* Dialog Aggiungi Persona */}
+      <AddPersonDialog
+        open={showAddPersonDialog}
+        onOpenChange={setShowAddPersonDialog}
+        onSuccess={handleAddPersonSuccess}
+      />
 
       {/* Debug Info - Rimuovere dopo il debug */}
       <DebugInfo />

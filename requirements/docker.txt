@@ -1,0 +1,9 @@
+# Include tutte le dipendenze base
+-r base.txt
+
+# ONNX Runtime per Docker/Linux (CPU)
+# Usa onnxruntime standard invece di onnxruntime-directml che è solo per Windows
+onnxruntime>=1.16.0
+
+# Elaborazione numerica
+faiss-cpu==1.7.4

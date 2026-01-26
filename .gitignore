@@ -11,6 +11,8 @@ cert.pem
 key.pem
 *.pem
 
+.idea
+
 # ignora file della documentazione compilati
 site/
 
