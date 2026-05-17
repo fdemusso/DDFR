@@ -1,209 +1,120 @@
-# Guida Docker per DDFR
+# Docker Setup
 
-Questa guida spiega come avviare il progetto DDFR utilizzando Docker e Docker Compose.
+DDFR ships with a fully configured `docker-compose.yml`. A single command starts the entire stack — MongoDB, the Python backend, and the React frontend — with no manual configuration needed.
 
-## Prerequisiti
+## Requirements
 
-- Docker Desktop installato e avviato
-- Docker Compose v3.8 o superiore
+[Docker Desktop](https://www.docker.com/products/docker-desktop/) (includes Docker Compose)
 
-## Struttura Docker
-
-Il progetto è composto da 3 servizi:
-
-- **mongodb**: Database MongoDB
-- **backend**: API FastAPI per il riconoscimento facciale
-- **frontend**: Applicazione React
-
-## Configurazione Iniziale
-
-### 1. File .env Backend
-
-Crea il file `.env` nella directory `backend/app/` basandoti su `backend/example.env.txt`:
+## Start
 
 ```bash
-cp backend/example.env.txt backend/app/.env
-```
-
-Modifica `backend/app/.env` con queste impostazioni per Docker:
-
-```env
-DB_URL=mongodb://mongodb:27017/
-DB_NAME=ddfr_db
-DB_COLLECTION=people
-DB_HASH="300a31fbdc6f3ff4fb27625c2ed49fdc"
-
-LOG_LOGFOLDER=logs
-
-APP_NAME=DDFR API
-APP_VERSION=1.0.0
-APP_DESCRIPTION=API per il riconoscimento facciale e la gestione delle persone
-APP_TOLLERANCE=0.45
-APP_DEBUG=false
-APP_HOST=0.0.0.0
-APP_PORT=8000
-APP_USE_HTTPS=false
-```
-
-**Nota importante**: `DB_URL` deve usare `mongodb://mongodb:27017/` (nome del servizio Docker) invece di `localhost`.
-
-## Avvio del Progetto
-
-### Avvio completo
-
-```bash
+git clone https://github.com/fdemusso/DDFR.git
+cd DDFR
 docker-compose up --build
 ```
 
-Questo comando:
-- Costruisce le immagini Docker per backend e frontend
-- Avvia tutti i servizi (mongodb, backend, frontend)
-- Mostra i log di tutti i container
+Open **http://localhost:3000** in your browser.
 
-### Avvio in background
+> **First run:** the InsightFace `buffalo_l` model downloads automatically (~300 MB). Subsequent starts skip this step and are fast.
 
-```bash
-docker-compose up -d --build
-```
+## Services
 
-### Visualizzazione log
+| Service | URL | Notes |
+| --- | --- | --- |
+| Frontend (React) | http://localhost:3000 | Served by nginx |
+| Backend (FastAPI) | http://localhost:8000 | REST API + WebSocket |
+| MongoDB | localhost:27017 | Persisted via Docker volume |
 
-```bash
-# Tutti i servizi
-docker-compose logs -f
+## Configuration
 
-# Singolo servizio
-docker-compose logs -f backend
-docker-compose logs -f frontend
-docker-compose logs -f mongodb
-```
+The backend reads `backend/.env.docker`, which is committed to the repository with safe defaults. You can edit it to tune recognition tolerance, enable debug logging, etc.
 
-## Accesso all'Applicazione
+`docker-compose.yml` overrides `DB_URL`, `DB_NAME`, and `DB_COLLECTION` via its `environment` section so the backend connects to the Docker-internal MongoDB service regardless of what is in `.env.docker`.
 
-Dopo l'avvio, l'applicazione sarà disponibile su:
+### Key variables
 
-- **Frontend**: http://localhost:3000
-- **Backend API**: http://localhost:8000
-- **MongoDB**: localhost:27017
+| Variable | Default | Description |
+| --- | --- | --- |
+| `APP_TOLLERANCE` | `0.45` | Face recognition distance threshold. Lower = stricter matching. |
+| `APP_DEBUG` | `false` | Enable verbose request/response logging. |
+| `DB_HASH` | *(pre-filled)* | Legacy field kept for backward compatibility. |
 
-## Webcam
+## Data Persistence
 
-La webcam viene acceduta direttamente dal browser dell'utente, non dal container Docker. Quando apri http://localhost:3000 nel browser, ti verrà chiesta l'autorizzazione per accedere alla webcam.
+Data is stored in named Docker volumes and survives container restarts:
 
-## Gestione dei Dati
+| Volume | Contents |
+| --- | --- |
+| `mongodb_data` | MongoDB documents (people registry + face embeddings) |
+| `backend_logs` | Backend application logs |
+| `backend_img` | Stored face images |
 
-### Volumi Docker
-
-I dati vengono salvati in volumi Docker persistenti:
-
-- `mongodb_data`: Database MongoDB
-- `backend_logs`: Log del backend
-- `backend_img`: Immagini salvate dal backend
-
-### Backup MongoDB
-
-Per fare backup del database:
-
-```bash
-docker-compose exec mongodb mongodump --out /data/backup
-docker cp ddfr_mongodb:/data/backup ./backup
-```
-
-### Reset completo
-
-Per eliminare tutti i dati e ricominciare:
+To wipe all data and start fresh:
 
 ```bash
 docker-compose down -v
 ```
 
-**Attenzione**: Questo elimina tutti i volumi e i dati salvati!
+> **Warning:** this permanently deletes all enrolled faces and person records.
 
-## Comandi Utili
+## Webcam & HTTPS
 
-### Stop dei servizi
+The webcam is accessed by the **browser**, not the Docker containers. On `localhost`, browsers allow camera access without HTTPS — the default Docker setup works out of the box.
 
-```bash
-docker-compose stop
-```
+If you deploy DDFR on a remote server or non-localhost URL, you will need HTTPS. See the [HTTPS Setup](README.md#https-setup) section in the main README.
 
-### Riavvio dei servizi
+## Useful Commands
 
 ```bash
-docker-compose restart
-```
+# Start all services in the background
+docker-compose up -d --build
 
-### Ricostruzione di un singolo servizio
+# Stop all services (data is preserved)
+docker-compose down
 
-```bash
+# Follow live logs
+docker-compose logs -f
+docker-compose logs -f backend
+docker-compose logs -f frontend
+
+# Rebuild and restart a single service
 docker-compose build backend
 docker-compose up -d backend
-```
 
-### Accesso al container
-
-```bash
-# Backend
+# Open a shell in a running container
 docker-compose exec backend bash
-
-# MongoDB
 docker-compose exec mongodb mongosh
-```
 
-### Verifica stato servizi
-
-```bash
+# Check service health
 docker-compose ps
+
+# MongoDB backup
+docker-compose exec mongodb mongodump --out /data/backup
+docker cp ddfr_mongodb:/data/backup ./backup
 ```
 
 ## Troubleshooting
 
-### Backend non si connette a MongoDB
+**Backend exits immediately after start**  
+The backend waits for MongoDB's health check to pass (up to ~40 s on first run). If it exits, run `docker-compose logs backend` to read the error.
 
-Verifica che:
-1. Il servizio `mongodb` sia avviato: `docker-compose ps`
-2. Il `DB_URL` nel file `.env` sia `mongodb://mongodb:27017/`
-3. I servizi siano sulla stessa rete Docker (gestito automaticamente da docker-compose)
+**`docker-compose up` fails with "Docker daemon not running"**  
+Start Docker Desktop and wait for it to report "Docker is running" in the system tray.
 
-### Frontend non si connette al backend
-
-Verifica che:
-1. Il backend sia avviato e risponda su http://localhost:8000
-2. Le variabili WebSocket nel `docker-compose.yml` siano corrette:
-   - `REACT_APP_WS_HOST=localhost` (per accesso dal browser)
-   - `REACT_APP_WS_PORT=8000`
-
-### Errori durante il build
-
-Se ci sono errori durante il build:
-
-1. Verifica che Docker abbia abbastanza risorse (RAM, spazio disco)
-2. Prova a ricostruire senza cache: `docker-compose build --no-cache`
-3. Verifica i log: `docker-compose build`
-
-### Porta già in uso
-
-Se una porta è già in uso, modifica le porte nel `docker-compose.yml`:
+**Port already in use**  
+Change the host port in `docker-compose.yml`:
 
 ```yaml
 ports:
-  - "3001:3000"  # Cambia 3000 in 3001
+  - "3001:3000"  # access frontend at localhost:3001
 ```
 
-## Sviluppo
+**Build fails with out-of-memory errors**  
+Increase Docker Desktop memory (Settings → Resources → Memory). The build requires ~2 GB RAM.
 
-Per sviluppo con hot-reload, puoi montare il codice sorgente come volume nel `docker-compose.yml`:
+**InsightFace model download fails**  
+The backend downloads models from a CDN on first run. Make sure Docker containers have outbound internet access (check firewall/proxy settings).
 
-```yaml
-backend:
-  volumes:
-    - ./backend/app:/app/app
-```
-
-Tuttavia, per semplicità, questa configurazione usa build di produzione.
-
-## Note
-
-- I modelli InsightFace vengono scaricati automaticamente al primo avvio del backend
-- I log del backend sono salvati nel volume `backend_logs`
-- MongoDB non richiede autenticazione in questa configurazione (solo per sviluppo locale)
+**No faces recognized after enrolling someone**  
+Check `APP_TOLLERANCE` in `backend/.env.docker`. The default is `0.45` — lower values require a closer match. Try increasing to `0.55` if recognition is too strict.

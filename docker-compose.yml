@@ -29,7 +29,7 @@ services:
     ports:
       - "8000:8000"
     volumes:
-      - ./backend/app/.env:/app/app/.env:ro
+      - ./backend/.env.docker:/app/app/.env:ro
       - backend_logs:/app/app/logs
       - backend_img:/app/app/img
     environment:
